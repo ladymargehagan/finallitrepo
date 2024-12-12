@@ -100,9 +100,9 @@ try {
         <div class="categories">
             <div class="category-grid">
                 <?php foreach ($categories as $category): ?>
-                    <div class="category-card" onclick="window.location.href='french_basic.php?languageId=<?= $languageId ?>&category=<?= $category['categorySlug'] ?>'">
+                    <div class="category-card" onclick="window.location.href='french_basic.php?course=<?= $languageId ?>&category=<?= $category['categorySlug'] ?>'">
                         <div class="category-icon">
-                            <?php if ($category['categorySlug'] === 'greetings-basics'): ?>
+                            <?php if ($category['categorySlug'] === 'greetings'): ?>
                                 <span class="number-badge">1</span>
                             <?php endif; ?>
                             <i class="<?= htmlspecialchars($category['icon']) ?>"></i>

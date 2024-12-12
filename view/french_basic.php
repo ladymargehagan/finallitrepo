@@ -8,12 +8,37 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-$courseId = isset($_GET['course']) ? (int)$_GET['course'] : 0;
-$category = isset($_GET['category']) ? htmlspecialchars($_GET['category']) : '';
+// Debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// Verify this is a valid course and category
-if ($courseId === 0 || $category === '') {
-    header('Location: dashboard.php');
+// Get and validate parameters
+$languageId = isset($_GET['course']) ? (int)$_GET['course'] : 0;
+$categorySlug = isset($_GET['category']) ? htmlspecialchars($_GET['category']) : '';
+
+// Verify this is a valid language and category
+$valid = false;
+if ($languageId > 0 && !empty($categorySlug)) {
+    // Check if this combination exists in our database
+    $stmt = $pdo->prepare("
+        SELECT l.languageId, wc.categoryId 
+        FROM languages l
+        JOIN word_categories wc 
+        WHERE l.languageId = ? 
+        AND wc.categorySlug = ?
+        AND l.active = 1
+    ");
+    
+    $stmt->execute([$languageId, $categorySlug]);
+    $result = $stmt->fetch();
+
+    if ($result) {
+        $valid = true;
+    }
+}
+
+if (!$valid) {
+    header('Location: dashboard.php?error=invalid_course');
     exit();
 }
 ?>
