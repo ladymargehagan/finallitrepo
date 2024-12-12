@@ -1,57 +1,63 @@
 <?php
 session_start();
-require_once '../config/db_connect.php';
+header('Content-Type: application/json');
 
-if (!isset($_SESSION['user_id']) || !isset($_POST['answer']) || !isset($_POST['wordId'])) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Invalid request']);
-    exit;
+if (!isset($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'error' => 'Not authenticated']);
+    exit();
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT * FROM words WHERE wordId = ?");
-    $stmt->execute([$_POST['wordId']]);
-    $word = $stmt->fetch();
+    require_once '../config/db_connect.php';
 
-    if (!$word) {
-        throw new Exception('Word not found');
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    if (!isset($input['wordId']) || !isset($input['segmentOrder'])) {
+        throw new Exception('Missing required fields');
     }
 
-    $userAnswer = strtolower(trim($_POST['answer']));
-    $correctAnswer = strtolower(trim($word['translation']));
+    $wordId = (int)$input['wordId'];
+    $userSegmentOrder = $input['segmentOrder']; // Array of segment IDs
 
-    $isCorrect = ($userAnswer === $correctAnswer);
+    // Get correct segment order
+    $stmt = $pdo->prepare("
+        SELECT s.segment_id, s.position 
+        FROM word_segments s 
+        WHERE s.word_id = ? AND s.is_distractor = FALSE 
+        ORDER BY s.position
+    ");
+    $stmt->execute([$wordId]);
+    $correctOrder = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Convert to simple arrays for comparison
+    $correctSegmentIds = array_column($correctOrder, 'segment_id');
+    
+    // Remove any distractor segments from user answer
+    $userSegmentOrder = array_values(array_intersect($userSegmentOrder, $correctSegmentIds));
+    
+    $isCorrect = ($userSegmentOrder === $correctSegmentIds);
 
     if ($isCorrect) {
         // Record the learned word
         $stmt = $pdo->prepare("
-            INSERT IGNORE INTO learned_words (user_id, word_id)
-            VALUES (?, ?)
+            INSERT IGNORE INTO learned_words 
+            (userId, wordId, proficiency, learnedDate) 
+            VALUES (?, ?, 'learning', CURRENT_TIMESTAMP)
         ");
-        $stmt->execute([$_SESSION['user_id'], $word['wordId']]);
-
-        // Update user progress
-        $stmt = $pdo->prepare("
-            UPDATE user_progress 
-            SET wordsLearned = wordsLearned + 1
-            WHERE userId = ? AND courseId = ?
-        ");
-        $stmt->execute([$_SESSION['user_id'], $word['courseId']]);
+        $stmt->execute([$_SESSION['user_id'], $wordId]);
     }
 
-    // Modified response format to match what the frontend expects
     echo json_encode([
         'success' => true,
         'correct' => $isCorrect,
-        'correctAnswer' => $word['translation'],
-        'word' => [
-            'id' => $word['wordId'],
-            'original' => $word['original'],
-            'pronunciation' => $word['pronunciation'] ?? null
-        ]
+        'correctOrder' => $correctSegmentIds
     ]);
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    echo json_encode([
+        'success' => false,
+        'error' => $e->getMessage()
+    ]);
 } 

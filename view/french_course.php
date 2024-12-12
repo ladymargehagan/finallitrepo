@@ -14,7 +14,10 @@ $language = isset($_GET['language']) ? $_GET['language'] : 'French';
 
 // Fetch course details
 try {
-    $stmt = $pdo->prepare("SELECT * FROM courses WHERE courseId = ? AND language = ?");
+    $stmt = $pdo->prepare("
+        SELECT * FROM languages 
+        WHERE languageId = ? AND languageName = ?
+    ");
     $stmt->execute([$courseId, $language]);
     $course = $stmt->fetch();
 
@@ -23,11 +26,13 @@ try {
         exit();
     }
 
-    // Replace user_progress with user_quiz_stats view
+    // Instead, get learned words count
     $stmt = $pdo->prepare("
-        SELECT quizzes_taken, average_score 
-        FROM user_quiz_stats 
-        WHERE userId = ? AND courseId = ?
+        SELECT COUNT(*) as wordsLearned 
+        FROM learned_words 
+        WHERE userId = ? AND wordId IN (
+            SELECT wordId FROM words WHERE languageId = ?
+        )
     ");
     $stmt->execute([$_SESSION['user_id'], $courseId]);
     $progress = $stmt->fetch();
