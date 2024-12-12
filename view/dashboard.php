@@ -99,7 +99,7 @@ try {
                     <img src="../assets/images/flags/french.png" alt="French Flag" class="course-flag">
                     <div class="course-info">
                         <h3>French</h3>
-                        <a href="course.php?id=1" class="btn btn-secondary">Start Learning</a>
+                        <a href="french_course.php?id=1&language=French" class="btn btn-secondary">Start Learning</a>
                     </div>
                 </div>
                 <?php foreach ($courses as $course): ?>

@@ -39,10 +39,16 @@ try {
         $stmt->execute([$_SESSION['user_id'], $word['courseId']]);
     }
 
+    // Modified response format to match what the frontend expects
     echo json_encode([
         'success' => true,
         'correct' => $isCorrect,
-        'correctAnswer' => $word['translation']
+        'correctAnswer' => $word['translation'],
+        'word' => [
+            'id' => $word['wordId'],
+            'original' => $word['original'],
+            'pronunciation' => $word['pronunciation'] ?? null
+        ]
     ]);
 
 } catch (Exception $e) {

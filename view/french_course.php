@@ -8,13 +8,14 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Get course ID from URL
+// Get course ID and language from URL
 $courseId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$language = isset($_GET['language']) ? $_GET['language'] : 'French';
 
 // Fetch course details
 try {
-    $stmt = $pdo->prepare("SELECT * FROM courses WHERE courseId = ? AND language = 'French'");
-    $stmt->execute([$courseId]);
+    $stmt = $pdo->prepare("SELECT * FROM courses WHERE courseId = ? AND language = ?");
+    $stmt->execute([$courseId, $language]);
     $course = $stmt->fetch();
 
     if (!$course) {
@@ -22,9 +23,10 @@ try {
         exit();
     }
 
-    // Fetch user's progress for this course
+    // Replace user_progress with user_quiz_stats view
     $stmt = $pdo->prepare("
-        SELECT * FROM user_progress 
+        SELECT quizzes_taken, average_score 
+        FROM user_quiz_stats 
         WHERE userId = ? AND courseId = ?
     ");
     $stmt->execute([$_SESSION['user_id'], $courseId]);
@@ -71,7 +73,7 @@ try {
 
         <div class="category-grid">
             <!-- Basic Phrases -->
-            <div class="category-card" onclick="window.location.href='learn.php?course=<?php echo $courseId; ?>&category=basic-phrases'">
+            <div class="category-card" onclick="window.location.href='french_basic.php?course=<?php echo $courseId; ?>&category=basic-phrases'">
                 <div class="category-icon">
                     <i class="fas fa-comments"></i>
                 </div>

@@ -12,6 +12,10 @@ class LearnGame {
         this.checkButton = document.querySelector('.btn-check');
         this.progressBar = document.querySelector('.progress');
         
+        if (!this.heartsContainer || !this.answerBox || !this.wordBank || !this.checkButton) {
+            throw new Error('Required DOM elements not found');
+        }
+        
         this.initialize();
     }
 
@@ -29,8 +33,6 @@ class LearnGame {
 
     setupEventListeners() {
         this.checkButton.addEventListener('click', () => this.checkAnswer());
-        
-        // Setup drag and drop for word tiles
         this.setupDragAndDrop();
     }
 
@@ -56,14 +58,11 @@ class LearnGame {
     }
 
     renderWord() {
-        // Clear previous word
         this.answerBox.innerHTML = '';
         this.wordBank.innerHTML = '';
 
-        // Update the French word display
         document.querySelector('.french-text').textContent = this.currentWord.original;
 
-        // Create word tiles
         this.currentWord.wordTiles.forEach(word => {
             const tile = document.createElement('div');
             tile.className = 'word-tile';
@@ -159,10 +158,51 @@ class LearnGame {
         }, 3000);
     }
 
-    // ... keep existing renderHearts(), loseHeart(), and gameOver() methods
+    renderHearts() {
+        this.heartsContainer.innerHTML = '';
+        for (let i = 0; i < this.hearts; i++) {
+            const heart = document.createElement('i');
+            heart.className = 'fas fa-heart';
+            this.heartsContainer.appendChild(heart);
+        }
+    }
+
+    loseHeart() {
+        this.hearts--;
+        this.renderHearts();
+        
+        if (this.hearts === 0) {
+            this.gameOver();
+        }
+    }
+
+    gameOver() {
+        // Show game over message
+        const message = document.createElement('div');
+        message.className = 'game-over-message';
+        message.textContent = 'Game Over! Try again.';
+        document.querySelector('.exercise-container').appendChild(message);
+
+        // Reset game after delay
+        setTimeout(() => {
+            this.hearts = 3;
+            this.currentWordIndex = 0;
+            this.renderHearts();
+            this.loadWord(this.currentWordIndex);
+            message.remove();
+        }, 2000);
+    }
 }
 
 // Initialize game when document is ready
 document.addEventListener('DOMContentLoaded', () => {
-    new LearnGame();
-});
+    try {
+        new LearnGame();
+    } catch (error) {
+        console.error('Failed to initialize game:', error);
+        const container = document.querySelector('.exercise-container');
+        if (container) {
+            container.innerHTML = '<div class="error-message">Failed to load game. Please refresh the page.</div>';
+        }
+    }
+}); 

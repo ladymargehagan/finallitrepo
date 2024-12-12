@@ -13,17 +13,16 @@
 }
 
 .progress-bar {
-    flex: 1;
-    height: 12px;
-    background: var(--gray-light);
-    border-radius: 6px;
-    margin-right: 1rem;
+    background-color: var(--gray-light);
+    height: 8px;
+    border-radius: 4px;
     overflow: hidden;
+    margin: 1rem 0;
 }
 
 .progress {
+    background-color: var(--coral);
     height: 100%;
-    background: var(--mindaro);
     transition: width 0.3s ease;
 }
 
@@ -148,12 +147,12 @@
     border-radius: 6px;
     padding: 0.7rem 1.2rem;
     cursor: move;
-    cursor: grab;
     user-select: none;
     font-weight: 500;
     transition: all 0.2s ease;
     position: relative;
     touch-action: none;
+    margin: 0.25rem;
 }
 
 .word-tile:active {
