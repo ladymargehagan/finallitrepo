@@ -228,12 +228,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('../actions/check_answer.php', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify({
-                    answer: userAnswer,
-                    wordId: currentWordId
-                })
+                body: `answer=${encodeURIComponent(userAnswer)}&wordId=${encodeURIComponent(currentWordId)}`
             });
 
             const result = await response.json();
