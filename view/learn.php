@@ -80,7 +80,7 @@ AND w.wordId NOT IN (
     AND proficiency = 'mastered'
 )
 ORDER BY RAND()
-LIMIT 1;
+LIMIT 1
 ");
 
 try {
@@ -116,11 +116,13 @@ try {
         $transCheck->execute([$languageId]);
         $transCount = $transCheck->fetchColumn();
         error_log("Translations for language $languageId: $transCount");
+        
+        // Set exercise to empty array instead of redirecting
+        $exercise = [];
     }
 } catch (PDOException $e) {
     error_log("DEBUG: Database error: " . $e->getMessage());
-    header('Location: dashboard.php?error=database_error');
-    exit();
+    $exercise = [];
 }
 
 // Fetch word bank options
