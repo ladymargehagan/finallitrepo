@@ -545,3 +545,66 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- More words for French (languageId = 1)
+INSERT INTO `words` (`languageId`, `original_text`, `categoryId`, `word`, `translation`, `pronunciation`, `difficulty`, `context_type`) VALUES
+-- Greetings & Basics (categoryId = 1)
+(1, 'Bonjour', 1, 'bonjour', 'hello', 'bohn-ZHOOR', 'easy', 'phrase'),
+(1, 'Au revoir', 1, 'au revoir', 'goodbye', 'oh ruh-VWAHR', 'easy', 'phrase'),
+(1, 'Merci', 1, 'merci', 'thank you', 'mehr-see', 'easy', 'phrase'),
+(1, 'S''il vous plaît', 1, 's''il vous plaît', 'please', 'seel voo pleh', 'easy', 'phrase'),
+
+-- Food & Drinks (categoryId = 4)
+(1, 'Le pain', 4, 'pain', 'bread', 'pah', 'easy', 'noun'),
+(1, 'L''eau', 4, 'eau', 'water', 'oh', 'easy', 'noun'),
+(1, 'Le café', 4, 'café', 'coffee', 'ka-fey', 'easy', 'noun'),
+(1, 'Le lait', 4, 'lait', 'milk', 'leh', 'easy', 'noun');
+
+-- Add translations for each word
+INSERT INTO `translations` (`wordId`, `translated_text`, `is_primary`) VALUES
+-- For Greetings
+(5, 'hello', 1),
+(5, 'hi', 0),
+(6, 'goodbye', 1),
+(6, 'bye', 0),
+(7, 'thank you', 1),
+(7, 'thanks', 0),
+(8, 'please', 1),
+
+-- For Food & Drinks
+(9, 'bread', 1),
+(10, 'water', 1),
+(11, 'coffee', 1),
+(12, 'milk', 1);
+
+-- Add word segments for translations
+INSERT INTO `word_segments` (`translationId`, `segment_text`, `position`, `part_of_speech`) VALUES
+-- For "hello"
+(5, 'hello', 1, 'interjection'),
+-- For "goodbye"
+(6, 'good', 1, 'adjective'),
+(6, 'bye', 2, 'interjection'),
+-- For "thank you"
+(7, 'thank', 1, 'verb'),
+(7, 'you', 2, 'pronoun'),
+-- For "please"
+(8, 'please', 1, 'interjection');
+
+-- Add more words to word bank
+INSERT INTO `word_bank` (`segment_text`, `languageId`, `part_of_speech`, `difficulty`, `usage_frequency`) VALUES
+('hello', 1, 'interjection', 'easy', 100),
+('hi', 1, 'interjection', 'easy', 90),
+('goodbye', 1, 'interjection', 'easy', 85),
+('thank', 1, 'verb', 'easy', 80),
+('you', 1, 'pronoun', 'easy', 95),
+('please', 1, 'interjection', 'easy', 75),
+('bread', 1, 'noun', 'easy', 70),
+('water', 1, 'noun', 'easy', 85),
+('coffee', 1, 'noun', 'easy', 80),
+('milk', 1, 'noun', 'easy', 75);
+
+-- Add relationships between words
+INSERT INTO `word_relationships` (`word1_id`, `word2_id`, `relationship_type`, `strength`) VALUES
+(17, 18, 'synonym', 9),  -- hello & hi
+(19, 20, 'related', 7),  -- goodbye & thank
+(21, 22, 'related', 6);  -- please & thank

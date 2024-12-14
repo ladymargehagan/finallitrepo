@@ -22,65 +22,35 @@ if (!isset($_SESSION['user_id'])) {
 $languageId = isset($_GET['course']) ? (int)$_GET['course'] : 0;
 $categorySlug = isset($_GET['category']) ? htmlspecialchars($_GET['category']) : '';
 
-// Debug the SQL query
-$debugQuery = "
+
+// Execute the query
+$stmt = $pdo->prepare("
     SELECT 
-        w.wordId as exerciseId,
-        'translation' as type,
+        w.wordId,
         w.word,
         w.pronunciation,
         w.context_type,
         w.difficulty,
         t.translated_text,
         wc.categoryName,
+        wc.categoryId,
         l.languageName,
-        wc.categoryId
+        'translation' as type
     FROM words w
     JOIN translations t ON w.wordId = t.wordId
     JOIN word_categories wc ON w.categoryId = wc.categoryId
     JOIN languages l ON w.languageId = l.languageId
-    WHERE w.languageId = $languageId 
-    AND wc.categorySlug = '$categorySlug'
+    WHERE w.languageId = ? 
+    AND wc.categorySlug = ?
     AND w.wordId NOT IN (
         SELECT wordId 
         FROM learned_words 
-        WHERE userId = {$_SESSION['user_id']}
+        WHERE userId = ? 
         AND proficiency = 'mastered'
     )
     AND t.is_primary = 1
     ORDER BY RAND()
-    LIMIT 1";
-
-error_log("DEBUG: Query being executed: " . $debugQuery);
-
-// Execute the query
-$stmt = $pdo->prepare("
-SELECT 
-    es.exerciseId,
-    es.type,
-    w.word,
-    w.pronunciation,
-    w.context_type,
-    es.difficulty,
-    t.translated_text,
-    wc.categoryName,
-    l.languageName,
-    wc.categoryId
-FROM exercise_sets es
-JOIN words w ON es.wordId = w.wordId
-JOIN translations t ON es.translationId = t.translationId
-JOIN word_categories wc ON w.categoryId = wc.categoryId
-JOIN languages l ON w.languageId = l.languageId
-WHERE w.languageId = ? 
-AND wc.categorySlug = ?
-AND w.wordId NOT IN (
-    SELECT wordId 
-    FROM learned_words 
-    WHERE userId = ? 
-    AND proficiency = 'mastered'
-)
-ORDER BY RAND()
-LIMIT 1
+    LIMIT 1
 ");
 
 try {
@@ -125,8 +95,49 @@ try {
     $exercise = [];
 }
 
-// Fetch word bank options
-// Fetch word bank options
+try {
+    $stmt->execute([$languageId, $categorySlug, $_SESSION['user_id']]);
+    $exercise = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    // Initialize error message
+    $errorMessage = null;
+    
+    // Check for specific error conditions
+    if (!$exercise) {
+        // Check what's missing
+        $wordCheck = $pdo->prepare("SELECT COUNT(*) FROM words WHERE languageId = ? AND categoryId = (SELECT categoryId FROM word_categories WHERE categorySlug = ?)");
+        $wordCheck->execute([$languageId, $categorySlug]);
+        $wordCount = $wordCheck->fetchColumn();
+        
+        if ($wordCount == 0) {
+            $errorMessage = "No words available in this category yet. Please try another category.";
+        } else {
+            $learnedCheck = $pdo->prepare("
+                SELECT COUNT(*) FROM words w 
+                WHERE w.languageId = ? 
+                AND w.categoryId = (SELECT categoryId FROM word_categories WHERE categorySlug = ?)
+                AND w.wordId NOT IN (
+                    SELECT wordId FROM learned_words 
+                    WHERE userId = ? AND proficiency = 'mastered'
+                )
+            ");
+            $learnedCheck->execute([$languageId, $categorySlug, $_SESSION['user_id']]);
+            $remainingWords = $learnedCheck->fetchColumn();
+            
+            if ($remainingWords == 0) {
+                $errorMessage = "Congratulations! You've mastered all words in this category.";
+            }
+        }
+        
+        if (!$errorMessage) {
+            $errorMessage = "Unable to load exercise. Please try again later.";
+        }
+    }
+} catch (PDOException $e) {
+    $errorMessage = "Database error occurred. Please try again later.";
+    error_log("Database error: " . $e->getMessage());
+}
+
 $stmt = $pdo->prepare("
     SELECT 
         ws.segment_text,
@@ -136,7 +147,7 @@ $stmt = $pdo->prepare("
     WHERE t.wordId = ?
     ORDER BY ws.position
 ");
-$stmt->execute([$exercise['exerciseId']]);
+$stmt->execute([$exercise['wordId']]);  // Note: changed from exerciseId to wordId
 $wordBank = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // If no word segments found, split the translation into words
@@ -189,87 +200,244 @@ $progressPercent = $progress['total_words'] > 0
     <link rel="stylesheet" href="../assets/css/styles.css">
     <link rel="stylesheet" href="../assets/css/learn.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: relative;
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .modal-buttons {
+            margin-top: 20px;
+        }
+        
+        .modal-buttons button {
+            margin: 0 10px;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .tips-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            max-width: 300px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .tips-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .tips-icon {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            background: #ffd700;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+        
+        .tips-content h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        .tips-content ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .tips-content li {
+            margin: 8px 0;
+            font-size: 14px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tips-content li i {
+            color: #4CAF50;
+            width: 20px;
+        }
+        
+        /* Make tips collapsible on mobile */
+        @media (max-width: 768px) {
+            .tips-container {
+                bottom: 10px;
+                right: 10px;
+                max-width: calc(100% - 40px);
+            }
+            
+            .tips-content {
+                display: none;
+            }
+            
+            .tips-container:hover .tips-content {
+                display: block;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="progress-container">
-        <div class="progress-bar">
-            <div class="progress" style="width: <?php echo $progressPercent; ?>%"></div>
-        </div>
-        <div class="hearts"></div>
-    </div>
-
-    <main class="learn-container">
-        <div class="exercise-container">
-            <div class="badge">
-                <i class="fas fa-star"></i>
-                <span class="exercise-type">
-                    <?php echo strtoupper($exercise['type']); ?>
-                    <span class="difficulty-badge <?php echo $exercise['difficulty']; ?>">
-                        <?php echo ucfirst($exercise['difficulty']); ?>
-                    </span>
-                </span>
-            </div>
-
-            <h2 class="question">
-                <?php 
-                switch($exercise['type']) {
-                    case 'translation':
-                        echo 'Translate this to English';
-                        break;
-                    case 'matching':
-                        echo 'Match the correct translation';
-                        break;
-                    case 'fill-in':
-                        echo 'Complete the sentence';
-                        break;
-                }
-                ?>
-            </h2>
-
-            <div class="character-display">
-                <div class="icon-container">
-                    <i class="fas fa-language fa-3x"></i>
-                </div>
-                <div class="speech-bubble">
-                    <span class="original-text" 
-                          data-pronunciation="<?php echo htmlspecialchars($exercise['pronunciation']); ?>"
-                          data-context="<?php echo htmlspecialchars($exercise['context_type']); ?>">
-                        <?php echo htmlspecialchars($exercise['word']); ?>
-                    </span>
-                    <button class="audio-btn" title="Listen to pronunciation">
-                        <i class="fas fa-volume-up"></i>
+    <?php if ($errorMessage): ?>
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal" style="display: block;">
+        <div class="modal-content">
+            <h3>Notice</h3>
+            <p><?php echo htmlspecialchars($errorMessage); ?></p>
+            <div class="modal-buttons">
+                <button onclick="window.location.href='dashboard.php'" class="btn btn-secondary">
+                    Return to Dashboard
+                </button>
+                <?php if (strpos($errorMessage, "mastered") !== false): ?>
+                    <button onclick="window.location.href='progress.php'" class="btn btn-primary">
+                        View Progress
                     </button>
-                </div>
-            </div>
-
-            <div class="answer-area">
-                <div class="answer-box" id="answerBox"></div>
-            </div>
-
-            <div class="word-bank" id="wordBank">
-                <?php foreach ($wordBank as $word): ?>
-                    <div class="word-tile" 
-                         draggable="true"
-                         data-part="<?php echo htmlspecialchars($word['part_of_speech']); ?>">
-                        <?php echo htmlspecialchars($word['segment_text']); ?>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-
-            <div class="action-buttons">
-                <button class="btn btn-primary" id="checkBtn">CHECK</button>
+                <?php endif; ?>
             </div>
         </div>
-    </main>
+    </div>
+    <?php else: ?>
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress" style="width: <?php echo $progressPercent; ?>%"></div>
+            </div>
+            <div class="hearts"></div>
+        </div>
 
-    <div id="courseData" 
-         data-exercise-id="<?php echo $exercise['exerciseId']; ?>"
-         data-language-id="<?php echo $languageId; ?>"
-         data-category="<?php echo htmlspecialchars($categorySlug); ?>"
-         data-type="<?php echo htmlspecialchars($exercise['type']); ?>"
-         style="display: none;">
+        <div class="tips-container">
+            <div class="tips-icon">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <div class="tips-content">
+                <h4>Quick Tips:</h4>
+                <ul>
+                    <li><i class="fas fa-arrows-alt"></i> Drag words from the word bank to form your answer</li>
+                    <li><i class="fas fa-mouse-pointer"></i> Double-click any word in your answer to send it back</li>
+                    <li><i class="fas fa-exchange-alt"></i> Drag words within your answer to reorder them</li>
+                </ul>
+            </div>
+        </div>
+
+        <main class="learn-container">
+            <div class="exercise-container">
+                <div class="badge">
+                    <i class="fas fa-star"></i>
+                    <span class="exercise-type">
+                        <?php echo strtoupper($exercise['type']); ?>
+                        <span class="difficulty-badge <?php echo $exercise['difficulty']; ?>">
+                            <?php echo ucfirst($exercise['difficulty']); ?>
+                        </span>
+                    </span>
+                </div>
+
+                <h2 class="question">
+                    <?php 
+                    switch($exercise['type']) {
+                        case 'translation':
+                            echo 'Translate this to English';
+                            break;
+                        case 'matching':
+                            echo 'Match the correct translation';
+                            break;
+                        case 'fill-in':
+                            echo 'Complete the sentence';
+                            break;
+                    }
+                    ?>
+                </h2>
+
+                <div class="character-display">
+                    <div class="icon-container">
+                        <i class="fas fa-language fa-3x"></i>
+                    </div>
+                    <div class="speech-bubble">
+                        <span class="original-text" 
+                              data-pronunciation="<?php echo htmlspecialchars($exercise['pronunciation']); ?>"
+                              data-context="<?php echo htmlspecialchars($exercise['context_type']); ?>">
+                            <?php echo htmlspecialchars($exercise['word']); ?>
+                        </span>
+                        <button class="audio-btn" title="Listen to pronunciation">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="answer-area">
+                    <div class="answer-box" id="answerBox"></div>
+                </div>
+
+                <div class="word-bank" id="wordBank">
+                    <?php foreach ($wordBank as $word): ?>
+                        <div class="word-tile" 
+                             draggable="true"
+                             data-part="<?php echo htmlspecialchars($word['part_of_speech']); ?>">
+                            <?php echo htmlspecialchars($word['segment_text']); ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="checkBtn">CHECK</button>
+                </div>
+            </div>
+        </main>
+
+        <div id="courseData" 
+            data-exercise-id="<?php echo $exercise['wordId']; ?>"
+            data-language-id="<?php echo $languageId; ?>"
+            data-category="<?php echo htmlspecialchars($categorySlug); ?>"
+            data-type="<?php echo htmlspecialchars($exercise['type']); ?>"
+            style="display: none;">
     </div>
 
     <script src="../assets/js/learn-game.js"></script>
+    <script>
+        // Handle modal close and navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('errorModal');
+            if (modal) {
+                // Prevent modal from closing when clicking outside
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        e.stopPropagation();
+                    }
+                });
+            }
+        });
+    </script>
+    <?php endif; ?>
 </body>
 </html> 
