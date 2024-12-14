@@ -31,12 +31,21 @@
 
 .hearts {
     display: flex;
-    gap: 0.5rem;
+    gap: 5px;
+    align-items: center;
 }
 
 .hearts i {
+    font-size: 24px;
+    transition: all 0.3s ease;
+}
+
+.hearts .bxs-heart {
     color: #ff4b4b;
-    font-size: 1.5rem;
+}
+
+.hearts .bx-heart {
+    color: #ccc;
 }
 
 .learn-container {

@@ -9,7 +9,7 @@ class LearnGame {
         this.initializeElements();
         this.setupEventListeners();
         this.initializeExercise();
-        this.initializeProgress();
+        this.updateHearts();
     }
 
     initializeElements() {
@@ -28,8 +28,6 @@ class LearnGame {
                 mastered: document.querySelector('.mastered')
             }
         };
-        
-        this.currentProgress = parseFloat(this.elements.progressElements.bar.style.width) || 0;
     }
 
     setupEventListeners() {
@@ -111,35 +109,35 @@ class LearnGame {
         }, { once: true });
     }
 
-    initializeProgress() {
-        this.progressElements = {
-            bar: document.querySelector('.progress-fill'),
-            percentage: document.querySelector('.progress-text'),
-            learning: document.querySelector('.learning'),
-            familiar: document.querySelector('.familiar'),
-            mastered: document.querySelector('.mastered')
-        };
-
-        // Initialize progress animation
-        this.currentProgress = parseFloat(this.progressElements.bar.style.width) || 0;
-    }
-
     updateProgress(progressData) {
-        const newProgress = progressData.progress;
-        const counts = progressData.counts;
+        console.log('Updating progress with:', progressData); // Debug log
+        
+        if (!progressData) return;
 
-        // Animate progress bar
-        this.animateProgress(this.currentProgress, newProgress);
-        this.currentProgress = newProgress;
+        // Update progress bar
+        if (this.elements.progressElements.bar) {
+            this.elements.progressElements.bar.style.width = `${progressData.progress}%`;
+        }
 
-        // Update counts with animation
-        this.animateCount(this.progressElements.learning, counts.learning_count);
-        this.animateCount(this.progressElements.familiar, counts.familiar_count);
-        this.animateCount(this.progressElements.mastered, counts.mastered_count);
+        // Update progress text
+        if (this.elements.progressElements.percentage) {
+            this.elements.progressElements.percentage.textContent = 
+                `Learning Progress: ${Math.round(progressData.progress)}%`;
+        }
 
-        // Update percentage text
-        this.progressElements.percentage.textContent = 
-            `Learning Progress: ${Math.round(newProgress)}%`;
+        // Update counts
+        if (progressData.counts) {
+            const counts = progressData.counts;
+            if (this.elements.progressElements.learning) {
+                this.elements.progressElements.learning.textContent = `Learning: ${counts.learning_count}`;
+            }
+            if (this.elements.progressElements.familiar) {
+                this.elements.progressElements.familiar.textContent = `Familiar: ${counts.familiar_count}`;
+            }
+            if (this.elements.progressElements.mastered) {
+                this.elements.progressElements.mastered.textContent = `Mastered: ${counts.mastered_count}`;
+            }
+        }
     }
 
     animateProgress(start, end) {
@@ -204,12 +202,17 @@ class LearnGame {
             });
 
             const data = await response.json();
+            console.log('Response data:', data); // Debug log
             
             if (data.success) {
                 if (data.correct) {
-                    this.progressData = data.progress;
+                    if (data.progress) {
+                        this.updateProgress(data.progress);
+                    }
                     this.showResultModal(true);
                 } else {
+                    // Show wrong answer modal
+                    this.showResultModal(false);
                     this.handleWrongAnswer(data.hint);
                 }
             } else {
@@ -221,7 +224,7 @@ class LearnGame {
         }
     }
 
-    showResultModal(isCorrect) {
+    showResultModal(isCorrect, hint = null) {
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
         
@@ -233,7 +236,7 @@ class LearnGame {
                 ${isCorrect ? '✓' : '✗'}
             </div>
             <div class="result-message">
-                ${isCorrect ? 'Correct!' : 'Try again!'}
+                ${isCorrect ? 'Correct!' : hint || 'Try again!'}
             </div>
             <button class="modal-button">
                 ${isCorrect ? 'Continue' : 'OK'}
@@ -241,7 +244,6 @@ class LearnGame {
         `;
         
         modal.innerHTML = content;
-        
         document.body.appendChild(overlay);
         document.body.appendChild(modal);
         
@@ -289,11 +291,56 @@ class LearnGame {
     handleWrongAnswer(hint) {
         this.hearts--;
         this.updateHearts();
-        this.showResultModal(false);
         
         if (this.hearts <= 0) {
-            this.gameOver();
+            this.showGameOverModal();
+        } else {
+            this.showResultModal(false, hint || 'Try again!');
         }
+    }
+
+    showGameOverModal() {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        
+        const modal = document.createElement('div');
+        modal.className = 'result-modal game-over';
+        
+        const content = `
+            <div class="result-icon">
+                <i class='bx bx-x-circle'></i>
+            </div>
+            <div class="result-message">
+                Better luck next time!
+            </div>
+            <button class="modal-button">Try Again</button>
+        `;
+        
+        modal.innerHTML = content;
+        document.body.appendChild(overlay);
+        document.body.appendChild(modal);
+        
+        setTimeout(() => {
+            overlay.classList.add('show');
+            modal.classList.add('show');
+        }, 10);
+        
+        const button = modal.querySelector('.modal-button');
+        button.onclick = () => {
+            overlay.classList.remove('show');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                overlay.remove();
+                modal.remove();
+                this.resetExercise();
+            }, 300);
+        };
+    }
+
+    resetExercise() {
+        this.hearts = 3;
+        this.updateHearts();
+        window.location.reload(); // Reload for new exercise while keeping progress
     }
 
     showProficiencyLevel(level) {
@@ -334,19 +381,45 @@ class LearnGame {
     }
 
     initializeTips() {
-        const tipsContainer = document.querySelector('.tips-container');
-        if (tipsContainer) {
-            const tipsToggle = tipsContainer.querySelector('.tips-toggle');
-            const tipsContent = tipsContainer.querySelector('.tips-content');
+        const tipsToggle = document.querySelector('.tips-toggle, .bulb-icon');
+        const tipsContent = document.querySelector('.quick-tips, .tips-content');
+        
+        if (tipsToggle && tipsContent) {
+            tipsToggle.style.cursor = 'pointer';
             
             tipsToggle.addEventListener('click', () => {
-                tipsContent.style.display = 
-                    tipsContent.style.display === 'none' ? 'block' : 'none';
+                const isVisible = tipsContent.style.display !== 'none';
+                tipsContent.style.display = isVisible ? 'none' : 'block';
+                localStorage.setItem('tipsVisible', !isVisible);
             });
+
+            // Set initial state
+            const shouldBeVisible = localStorage.getItem('tipsVisible') !== 'false';
+            tipsContent.style.display = shouldBeVisible ? 'block' : 'none';
         }
     }
 
-    // ... (keep your existing utility methods)
+    updateHearts() {
+        if (this.elements.hearts) {
+            this.elements.hearts.innerHTML = '';
+            
+            // Add filled hearts based on remaining hearts
+            for (let i = 0; i < this.hearts; i++) {
+                const heart = document.createElement('i');
+                heart.className = 'bx bxs-heart';
+                heart.style.color = '#ff4b4b';
+                this.elements.hearts.appendChild(heart);
+            }
+
+            // Add empty hearts for lost ones
+            for (let i = this.hearts; i < 3; i++) {
+                const heart = document.createElement('i');
+                heart.className = 'bx bx-heart';
+                heart.style.color = '#ccc';
+                this.elements.hearts.appendChild(heart);
+            }
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
