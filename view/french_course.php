@@ -56,7 +56,7 @@ try {
     <!-- Header -->
     <header class="course-header">
         <div class="nav-logo">
-            <img src="../assets/images/logo.png" alt="Logo" class="logo-image">
+            <img src="../assets/images/logo.svg" alt="Language Learning Platform Logo" class="logo-image">
         </div>
         <div class="course-progress">
             <div class="progress-bar">
@@ -64,10 +64,14 @@ try {
             </div>
             <span class="progress-text"><?php echo $progress['wordsLearned'] ?? 0 ?> words learned</span>
         </div>
-        <a href="dashboard.php" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i>
-            Back to Dashboard
-        </a>
+        <div class="auth-buttons">
+            <a href="profile.php" class="btn-secondary">
+                <i class="fas fa-user"></i> Profile
+            </a>
+            <a href="../actions/logout.php" class="btn-primary">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
     </header>
 
     <main class="course-content">

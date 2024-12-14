@@ -1,56 +1,44 @@
 class LearnGame {
-    constructor() {
+    constructor(container, courseId, category) {
+        this.container = container;
+        this.courseId = courseId;
+        this.category = category;
+        this.currentExercise = null;
         this.hearts = 3;
-        this.currentWordIndex = 0;
-        this.currentWord = null;
-        this.initialized = false;
 
-        // DOM elements
-        this.heartsContainer = document.querySelector('.hearts');
-        this.answerBox = document.querySelector('.answer-box');
-        this.wordBank = document.querySelector('.word-bank');
-        this.checkButton = document.querySelector('.btn-check');
-        this.progressBar = document.querySelector('.progress');
+        // Get DOM elements
+        this.answerBox = container.querySelector('.answer-box');
+        this.wordBank = container.querySelector('.word-bank');
+        this.checkButton = container.querySelector('#checkBtn');
         
-        this.initialize();
-    }
-
-    async initialize() {
-        try {
-            await this.loadNextWord();
-            this.renderHearts();
-            this.setupEventListeners();
-            this.initialized = true;
-        } catch (error) {
-            console.error('Failed to initialize game:', error);
-            this.showError('Failed to initialize game. Please refresh the page.');
-        }
-    }
-
-    setupEventListeners() {
-        this.checkButton.addEventListener('click', () => this.checkAnswer());
-        
-        // Setup drag and drop for word tiles
-        this.setupDragAndDrop();
+        // Initialize
+        this.setupEventListeners();
+        this.loadNextWord();
     }
 
     async loadNextWord() {
         try {
-            const urlParams = new URLSearchParams(window.location.search);
-            const courseId = urlParams.get('course');
-            const category = urlParams.get('category');
+            const response = await fetch('../actions/get_next_word.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    courseId: this.courseId,
+                    category: this.category
+                })
+            });
 
-            const response = await fetch(`../actions/get_next_word.php?courseId=${courseId}&category=${category}`);
             const data = await response.json();
-
-            if (!data.success) {
-                throw new Error(data.message);
+            
+            if (data.success) {
+                this.currentExercise = data.word;
+                this.renderWord();
+            } else {
+                throw new Error(data.error || 'Failed to load word');
             }
-
-            this.currentWord = data.word;
-            this.renderWord();
         } catch (error) {
-            console.error('Failed to load word:', error);
+            console.error('Error loading word:', error);
             this.showError('Failed to load next word. Please try again.');
         }
     }
@@ -60,16 +48,26 @@ class LearnGame {
         this.answerBox.innerHTML = '';
         this.wordBank.innerHTML = '';
 
-        // Update the French word display
-        document.querySelector('.french-text').textContent = this.currentWord.original;
+        // Update the original text display
+        document.querySelector('.french-text').textContent = this.currentExercise.original;
 
-        // Create word tiles
-        this.currentWord.wordTiles.forEach(word => {
+        // Create word tiles from segments
+        this.currentExercise.segments.forEach(segment => {
             const tile = document.createElement('div');
             tile.className = 'word-tile';
-            tile.textContent = word;
+            tile.textContent = segment;
             tile.draggable = true;
             this.wordBank.appendChild(tile);
+        });
+
+        // Shuffle the word bank tiles
+        this.shuffleWordBank();
+    }
+
+    shuffleWordBank() {
+        const tiles = Array.from(this.wordBank.children);
+        tiles.forEach(tile => {
+            tile.style.order = Math.floor(Math.random() * tiles.length);
         });
     }
 
@@ -86,7 +84,7 @@ class LearnGame {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    wordId: this.currentWord.id,
+                    exerciseId: this.currentExercise.id,
                     answer: userAnswer
                 })
             });
@@ -97,10 +95,10 @@ class LearnGame {
                 if (data.correct) {
                     this.handleCorrectAnswer();
                 } else {
-                    this.handleWrongAnswer();
+                    this.handleWrongAnswer(data.hint);
                 }
             } else {
-                throw new Error(data.message);
+                throw new Error(data.error);
             }
         } catch (error) {
             console.error('Error checking answer:', error);
@@ -108,22 +106,18 @@ class LearnGame {
         }
     }
 
-    handleCorrectAnswer() {
-        this.answerBox.classList.add('correct-answer');
-        
-        setTimeout(async () => {
-            this.answerBox.classList.remove('correct-answer');
-            await this.loadNextWord();
-        }, 1000);
-    }
+    setupEventListeners() {
+        // Drag and drop functionality
+        this.setupDragAndDrop();
 
-    handleWrongAnswer() {
-        this.answerBox.classList.add('wrong-answer', 'shake');
-        this.loseHeart();
-        
-        setTimeout(() => {
-            this.answerBox.classList.remove('wrong-answer', 'shake');
-        }, 500);
+        // Check button
+        this.checkButton.addEventListener('click', () => this.checkAnswer());
+
+        // Reset button (if exists)
+        const resetBtn = this.container.querySelector('#resetBtn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => this.resetAnswer());
+        }
     }
 
     setupDragAndDrop() {
@@ -143,26 +137,47 @@ class LearnGame {
             e.preventDefault();
             const draggable = document.querySelector('.dragging');
             if (draggable) {
-                this.answerBox.appendChild(draggable);
+                const afterElement = this.getDragAfterElement(this.answerBox, e.clientY);
+                if (afterElement) {
+                    this.answerBox.insertBefore(draggable, afterElement);
+                } else {
+                    this.answerBox.appendChild(draggable);
+                }
             }
         });
+    }
+
+    getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.word-tile:not(.dragging)')];
+        
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    resetAnswer() {
+        // Move all tiles back to word bank
+        Array.from(this.answerBox.children).forEach(tile => {
+            this.wordBank.appendChild(tile);
+        });
+        this.shuffleWordBank();
     }
 
     showError(message) {
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
         errorDiv.textContent = message;
-        document.querySelector('.exercise-container').appendChild(errorDiv);
+        this.container.appendChild(errorDiv);
 
         setTimeout(() => {
             errorDiv.remove();
         }, 3000);
     }
-
-    // ... keep existing renderHearts(), loseHeart(), and gameOver() methods
 }
-
-// Initialize game when document is ready
-document.addEventListener('DOMContentLoaded', () => {
-    new LearnGame();
-});

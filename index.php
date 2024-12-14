@@ -12,7 +12,7 @@
     <!-- Header Navigation -->
     <header class="main-navigation">
         <div class="nav-logo">
-            <img src="assets/images/logo.png" alt="Language Learning Platform Logo" class="logo-image">
+            <img src="assets/images/logo.svg" alt="Language Learning Platform Logo" class="logo-image">
         </div>
         <nav class="auth-buttons">
             <a href="view/login.php" class="btn btn-secondary">

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Dec 12, 2024 at 09:52 PM
+-- Generation Time: Dec 14, 2024 at 01:39 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -35,6 +35,16 @@ CREATE TABLE `exercise_sets` (
   `type` enum('translation','matching','fill-in') NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `exercise_sets`
+--
+
+INSERT INTO `exercise_sets` (`exerciseId`, `wordId`, `translationId`, `difficulty`, `type`, `created_at`) VALUES
+(1, 2, 3, 'easy', 'translation', '2024-12-12 21:26:26'),
+(2, 2, 3, 'easy', 'translation', '2024-12-13 23:54:20'),
+(3, 1, 1, 'easy', 'translation', '2024-12-13 23:54:45'),
+(4, 1, 1, 'easy', 'translation', '2024-12-13 23:55:53');
 
 -- --------------------------------------------------------
 
@@ -132,7 +142,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `firstName`, `lastName`, `email`, `password`, `role`, `joinDate`) VALUES
-(1, 'Marge', 'Hagan', 'margenana@home.com', '$2y$10$bJ7d/5Ete0x/Z72tTio8QOh01F5ekPwf0pFp14Hjspcm7bWK0oHUu', 'student', '2024-12-12 18:22:15');
+(1, 'Marge', 'Hagan', 'margenana@home.com', '$2y$10$bJ7d/5Ete0x/Z72tTio8QOh01F5ekPwf0pFp14Hjspcm7bWK0oHUu', 'student', '2024-12-12 18:22:15'),
+(2, 'Lady', 'Hagan', 'mh@gmail.com', '$2y$10$1w.Ysh/jfd7ogsyK7HquLuozxqcxJwLMIQKt1EvyVfGOgZ5FxtqHS', 'student', '2024-12-14 00:08:28'),
+(3, 'Nana', 'Amoako', 'nana.amoako@ashesi.edu.gh', '$2y$10$lIcC6A5XtC4PGL.vMt.1EO9nAEUuN80SALBv7hAASqfFydmfhq6Bu', 'student', '2024-12-14 00:09:08'),
+(4, 'marge', 'hagan', 'margehagan@gmail.com', '$2y$10$lFXIu.dHl4Jz6bkgVenvROYl6i7SaBi7s68SzXJ0dWzQ0IfPtomfW', 'student', '2024-12-14 00:10:14');
 
 -- --------------------------------------------------------
 
@@ -153,7 +166,9 @@ CREATE TABLE `user_enrollments` (
 --
 
 INSERT INTO `user_enrollments` (`enrollmentId`, `userId`, `languageId`, `status`, `enrollmentDate`) VALUES
-(1, 1, 1, 'active', '2024-12-12 18:37:26');
+(1, 1, 1, 'active', '2024-12-12 18:37:26'),
+(2, 3, 1, 'active', '2024-12-14 00:09:27'),
+(3, 4, 1, 'active', '2024-12-14 00:18:16');
 
 -- --------------------------------------------------------
 
@@ -400,7 +415,7 @@ ALTER TABLE `word_segments`
 -- AUTO_INCREMENT for table `exercise_sets`
 --
 ALTER TABLE `exercise_sets`
-  MODIFY `exerciseId` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `exerciseId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `languages`
@@ -424,13 +439,13 @@ ALTER TABLE `translations`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `user_enrollments`
 --
 ALTER TABLE `user_enrollments`
-  MODIFY `enrollmentId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `enrollmentId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `words`
@@ -448,7 +463,7 @@ ALTER TABLE `word_bank`
 -- AUTO_INCREMENT for table `word_categories`
 --
 ALTER TABLE `word_categories`
-  MODIFY `categoryId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `categoryId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `word_relationships`

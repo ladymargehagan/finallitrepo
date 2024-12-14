@@ -49,17 +49,17 @@ $availableCourses = $stmt->fetchAll();
     <!-- Dashboard Header -->
     <header class="dashboard-header">
         <div class="nav-logo">
-            <img src="../assets/images/logo.png" alt="Logo" class="logo-image">
+            <img src="../assets/images/logo.svg" alt="Language Learning Platform Logo" class="logo-image">
         </div>
         <div class="header-actions">
-            <button class="btn btn-secondary">
-                <i class="fas fa-user"></i>
-                Profile
-            </button>
-            <a href="../actions/logout.php" class="btn btn-primary">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
+            <div class="auth-buttons">
+                <a href="profile.php" class="btn-secondary">
+                    <i class="fas fa-user"></i> Profile
+                </a>
+                <a href="../actions/logout.php" class="btn-primary">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
         </div>
     </header>
 
