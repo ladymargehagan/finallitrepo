@@ -60,7 +60,6 @@ try {
     echo json_encode([
         'success' => true,
         'correct' => $isCorrect,
-        'hint' => $isCorrect ? null : 'Try again! The correct answer is different.',
         'progress' => $progress
     ]);
 

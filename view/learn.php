@@ -343,11 +343,9 @@ $totalExercises = $stmt->fetchColumn();
                     </div>
                 </div>
                 <div class="hearts-display">
-                    <?php for($i = 0; $i < 3; $i++): ?>
-                        <div class="heart">
-                            <i class='bx bxs-heart'></i>
-                        </div>
-                    <?php endfor; ?>
+                    <div class="hearts">
+                        <!-- Remove the PHP loop that creates hearts -->
+                    </div>
                 </div>
             </div>
         </div>

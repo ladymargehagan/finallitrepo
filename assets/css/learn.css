@@ -639,3 +639,62 @@
 .modal-button:active {
     transform: translateY(0);
 }
+
+.result-modal.game-over {
+    animation: shake 0.5s ease-in-out;
+}
+
+.result-modal.game-over .result-icon {
+    color: #ff4b4b;
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+.result-modal.game-over .result-message {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+    25% { transform: translate(-50%, -50%) rotate(-5deg); }
+    75% { transform: translate(-50%, -50%) rotate(5deg); }
+}
+
+.modal-overlay {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+}
+
+.modal-button {
+    background: #2196F3;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modal-button:hover {
+    background: #1976D2;
+    transform: translateY(-2px);
+}
+
+@keyframes heartBeat {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.heart-beat {
+    animation: heartBeat 0.3s ease-in-out;
+}

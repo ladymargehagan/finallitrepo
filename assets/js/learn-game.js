@@ -202,7 +202,7 @@ class LearnGame {
             });
 
             const data = await response.json();
-            console.log('Response data:', data); // Debug log
+            console.log('Response data:', data);
             
             if (data.success) {
                 if (data.correct) {
@@ -211,9 +211,7 @@ class LearnGame {
                     }
                     this.showResultModal(true);
                 } else {
-                    // Show wrong answer modal
-                    this.showResultModal(false);
-                    this.handleWrongAnswer(data.hint);
+                    this.handleWrongAnswer();
                 }
             } else {
                 throw new Error(data.error);
@@ -224,7 +222,7 @@ class LearnGame {
         }
     }
 
-    showResultModal(isCorrect, hint = null) {
+    showResultModal(isCorrect, message = null) {
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
         
@@ -236,7 +234,7 @@ class LearnGame {
                 ${isCorrect ? '✓' : '✗'}
             </div>
             <div class="result-message">
-                ${isCorrect ? 'Correct!' : hint || 'Try again!'}
+                ${isCorrect ? 'Correct!' : message || 'Try again!'}
             </div>
             <button class="modal-button">
                 ${isCorrect ? 'Continue' : 'OK'}
@@ -253,34 +251,17 @@ class LearnGame {
         }, 10);
         
         const button = modal.querySelector('.modal-button');
-        
-        if (isCorrect) {
-            button.onclick = () => {
-                if (this.progressData) {
-                    this.updateProgress(this.progressData);
+        button.onclick = () => {
+            overlay.classList.remove('show');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                overlay.remove();
+                modal.remove();
+                if (isCorrect) {
+                    window.location.href = new URL(window.location.href).toString();
                 }
-                
-                overlay.classList.remove('show');
-                modal.classList.remove('show');
-                
-                setTimeout(() => {
-                    overlay.remove();
-                    modal.remove();
-                    // Get the current URL and reload with a new exercise
-                    const currentUrl = new URL(window.location.href);
-                    window.location.href = currentUrl.toString();
-                }, 300);
-            };
-        } else {
-            button.onclick = () => {
-                overlay.classList.remove('show');
-                modal.classList.remove('show');
-                setTimeout(() => {
-                    overlay.remove();
-                    modal.remove();
-                }, 300);
-            };
-        }
+            }, 300);
+        };
     }
 
     handleCorrectAnswer() {
@@ -288,14 +269,14 @@ class LearnGame {
         this.showResultModal(true);
     }
 
-    handleWrongAnswer(hint) {
+    handleWrongAnswer() {
         this.hearts--;
         this.updateHearts();
         
         if (this.hearts <= 0) {
             this.showGameOverModal();
         } else {
-            this.showResultModal(false, hint || 'Try again!');
+            this.showResultModal(false, 'Try again!');
         }
     }
 
@@ -407,7 +388,8 @@ class LearnGame {
             for (let i = 0; i < this.hearts; i++) {
                 const heart = document.createElement('i');
                 heart.className = 'bx bxs-heart';
-                heart.style.color = '#ff4b4b';
+                heart.style.color = '#ff4b4b';  // Red color
+                heart.classList.add('heart-beat'); // Add animation class
                 this.elements.hearts.appendChild(heart);
             }
 
@@ -415,7 +397,7 @@ class LearnGame {
             for (let i = this.hearts; i < 3; i++) {
                 const heart = document.createElement('i');
                 heart.className = 'bx bx-heart';
-                heart.style.color = '#ccc';
+                heart.style.color = '#ccc';  // Gray color
                 this.elements.hearts.appendChild(heart);
             }
         }
