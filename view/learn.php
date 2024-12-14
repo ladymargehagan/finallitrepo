@@ -26,29 +26,26 @@ $categorySlug = isset($_GET['category']) ? htmlspecialchars($_GET['category']) :
 // Execute the query
 $stmt = $pdo->prepare("
     SELECT 
-        w.wordId,
+        es.exerciseId,
+        es.wordId,
         w.word,
         w.pronunciation,
         w.context_type,
         w.difficulty,
-        t.translated_text,
+        es.type,
         wc.categoryName,
         wc.categoryId,
-        l.languageName,
-        'translation' as type
-    FROM words w
-    JOIN translations t ON w.wordId = t.wordId
+        l.languageName
+    FROM exercise_sets es
+    JOIN words w ON es.wordId = w.wordId
     JOIN word_categories wc ON w.categoryId = wc.categoryId
     JOIN languages l ON w.languageId = l.languageId
     WHERE w.languageId = ? 
     AND wc.categorySlug = ?
     AND w.wordId NOT IN (
-        SELECT wordId 
-        FROM learned_words 
-        WHERE userId = ? 
-        AND proficiency = 'mastered'
+        SELECT wordId FROM learned_words 
+        WHERE userId = ? AND proficiency = 'mastered'
     )
-    AND t.is_primary = 1
     ORDER BY RAND()
     LIMIT 1
 ");
@@ -138,27 +135,27 @@ try {
     error_log("Database error: " . $e->getMessage());
 }
 
-$stmt = $pdo->prepare("
-    SELECT 
-        ws.segment_text,
-        ws.part_of_speech
-    FROM word_segments ws
-    JOIN translations t ON ws.translationId = t.translationId
-    WHERE t.wordId = ?
-    ORDER BY ws.position
-");
-$stmt->execute([$exercise['wordId']]);  // Note: changed from exerciseId to wordId
-$wordBank = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// If no word segments found, split the translation into words
-if (empty($wordBank)) {
-    $words = explode(' ', $exercise['translated_text']);
-    $wordBank = array_map(function($word) {
-        return [
-            'segment_text' => $word,
-            'part_of_speech' => null
-        ];
-    }, $words);
+// After getting the exercise, add debug logging
+if ($exercise) {
+    error_log("DEBUG: Exercise found: " . json_encode($exercise));
+    
+    // Get word bank options with more detailed query
+    $wordBankStmt = $pdo->prepare("
+        SELECT 
+            wb.bankWordId,
+            wb.segment_text,
+            wb.part_of_speech,
+            ewb.is_answer,
+            ewb.position
+        FROM exercise_word_bank ewb
+        JOIN word_bank wb ON ewb.bankWordId = wb.bankWordId
+        WHERE ewb.exerciseId = ?
+    ");
+    
+    error_log("DEBUG: Executing word bank query for exerciseId: " . $exercise['exerciseId']);
+    $wordBankStmt->execute([$exercise['exerciseId']]);
+    $wordBank = $wordBankStmt->fetchAll(PDO::FETCH_ASSOC);
+    error_log("DEBUG: Word bank results: " . json_encode($wordBank));
 }
 
 // Get progress statistics
@@ -403,7 +400,9 @@ $progressPercent = $progress['total_words'] > 0
                     <?php foreach ($wordBank as $word): ?>
                         <div class="word-tile" 
                              draggable="true"
-                             data-part="<?php echo htmlspecialchars($word['part_of_speech']); ?>">
+                             data-part="<?php echo htmlspecialchars($word['part_of_speech']); ?>"
+                             data-is-answer="<?php echo $word['is_answer']; ?>"
+                             data-position="<?php echo $word['position']; ?>">
                             <?php echo htmlspecialchars($word['segment_text']); ?>
                         </div>
                     <?php endforeach; ?>
@@ -416,7 +415,7 @@ $progressPercent = $progress['total_words'] > 0
         </main>
 
         <div id="courseData" 
-            data-exercise-id="<?php echo $exercise['wordId']; ?>"
+            data-exercise-id="<?php echo $exercise['exerciseId']; ?>"
             data-language-id="<?php echo $languageId; ?>"
             data-category="<?php echo htmlspecialchars($categorySlug); ?>"
             data-type="<?php echo htmlspecialchars($exercise['type']); ?>"

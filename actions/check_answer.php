@@ -17,45 +17,35 @@ try {
         throw new Exception('Missing required fields');
     }
 
-    // Get correct sequence from exercise
+    // Get correct sequence from exercise_word_bank
     $stmt = $pdo->prepare("
         SELECT 
-            e.correct_sequence,
-            e.wordId,
-            e.translationId
-        FROM exercise_sets e
-        WHERE e.exerciseId = ?
+            wb.segment_text,
+            ewb.position
+        FROM exercise_word_bank ewb
+        JOIN word_bank wb ON ewb.bankWordId = wb.bankWordId
+        WHERE ewb.exerciseId = ?
+        AND ewb.is_answer = 1
+        ORDER BY ewb.position
     ");
+
     $stmt->execute([$input['exerciseId']]);
-    $exercise = $stmt->fetch(PDO::FETCH_ASSOC);
+    $correctSequence = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (!$exercise) {
-        throw new Exception('Exercise not found');
-    }
+    // Build correct answer string
+    $correctAnswer = implode(' ', array_map(function($word) {
+        return $word['segment_text'];
+    }, $correctSequence));
 
-    $correctSequence = json_decode($exercise['correct_sequence'], true);
-    $userAnswer = explode(' ', trim($input['answer']));
-
-    // Check if arrays have same length
-    if (count($userAnswer) !== count($correctSequence)) {
-        echo json_encode([
-            'success' => true,
-            'correct' => false,
-            'hint' => 'Wrong number of words'
-        ]);
-        exit();
-    }
-
-    // Check each position
-    $isCorrect = true;
-    for ($i = 0; $i < count($correctSequence); $i++) {
-        if ($userAnswer[$i] !== $correctSequence[$i]['text']) {
-            $isCorrect = false;
-            break;
-        }
-    }
+    // Compare with user answer
+    $isCorrect = (trim($input['answer']) === trim($correctAnswer));
 
     if ($isCorrect) {
+        // Get wordId for the exercise
+        $stmt = $pdo->prepare("SELECT wordId FROM exercise_sets WHERE exerciseId = ?");
+        $stmt->execute([$input['exerciseId']]);
+        $wordId = $stmt->fetchColumn();
+
         // Update user progress
         $stmt = $pdo->prepare("
             INSERT INTO learned_words 
@@ -68,13 +58,12 @@ try {
                     ELSE proficiency
                 END
         ");
-        $stmt->execute([$_SESSION['user_id'], $exercise['wordId']]);
+        $stmt->execute([$_SESSION['user_id'], $wordId]);
     }
 
     echo json_encode([
         'success' => true,
         'correct' => $isCorrect,
-        'correctSequence' => $correctSequence,
         'hint' => $isCorrect ? null : 'Check word order'
     ]);
 
@@ -83,10 +72,6 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage(),
-        'debug' => [
-            'wordId' => $exercise['wordId'] ?? null,
-            'answerId' => $input['answer'] ?? null
-        ]
+        'error' => $e->getMessage()
     ]);
 } 
