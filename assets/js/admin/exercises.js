@@ -117,9 +117,15 @@ class ExerciseCreator {
     async loadExistingExercises() {
         try {
             const response = await fetch('../../actions/admin/get_exercises.php');
-            const exercises = await response.json();
+            const data = await response.json();
             
-            this.exerciseGrid.innerHTML = exercises.map(exercise => this.createExerciseCard(exercise)).join('');
+            if (data.success && data.exercises) {
+                this.exerciseGrid.innerHTML = data.exercises
+                    .map(exercise => this.createExerciseCard(exercise))
+                    .join('');
+            } else {
+                console.error('Failed to load exercises:', data.error);
+            }
         } catch (error) {
             console.error('Error loading exercises:', error);
         }
@@ -128,17 +134,17 @@ class ExerciseCreator {
     createExerciseCard(exercise) {
         return `
             <div class="exercise-card">
-                <h3>${exercise.questionText}</h3>
+                <h3>${exercise.questionText || 'No question text'}</h3>
                 <div class="meta">
-                    <span>${exercise.languageName}</span>
-                    <span>${exercise.categoryName}</span>
-                    <span>${exercise.difficulty}</span>
+                    <span>${exercise.languageName || 'Unknown language'}</span>
+                    <span>${exercise.categoryName || 'Unknown category'}</span>
+                    <span>Difficulty: ${exercise.difficulty || 'Not set'}</span>
                 </div>
                 <div class="actions">
-                    <button onclick="exerciseCreator.editExercise(${exercise.id})" class="btn-secondary">
+                    <button onclick="exerciseCreator.editExercise(${exercise.exerciseId})" class="btn-secondary">
                         <i class="fas fa-edit"></i> Edit
                     </button>
-                    <button onclick="exerciseCreator.deleteExercise(${exercise.id})" class="btn-danger">
+                    <button onclick="exerciseCreator.deleteExercise(${exercise.exerciseId})" class="btn-danger">
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
@@ -153,5 +159,7 @@ class ExerciseCreator {
     }
 }
 
-// Initialize the exercise creator
-const exerciseCreator = new ExerciseCreator();
+// Initialize the exercise creator when the document loads
+document.addEventListener('DOMContentLoaded', () => {
+    window.exerciseCreator = new ExerciseCreator();
+});

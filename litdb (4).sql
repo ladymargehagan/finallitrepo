@@ -109,7 +109,8 @@ CREATE TABLE `languages` (
   `languageName` varchar(50) NOT NULL,
   `level` enum('Beginner','Intermediate','Advanced') NOT NULL,
   `description` text DEFAULT NULL,
-  `active` tinyint(1) DEFAULT 1
+  `active` tinyint(1) DEFAULT 1,
+  `languageCode` VARCHAR(2) NOT NULL DEFAULT 'en'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

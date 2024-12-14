@@ -12,10 +12,15 @@ try {
     $languageName = $_POST['languageName'];
     $languageCode = strtolower($_POST['languageCode']);
     
+    // Validate language code format
+    if (!preg_match('/^[a-z]{2}$/', $languageCode)) {
+        throw new Exception('Invalid language code format');
+    }
+    
     $stmt = $pdo->prepare("
         INSERT INTO languages (
             languageName, 
-            languageCode, 
+            languageCode,
             active
         ) VALUES (?, ?, 1)
     ");

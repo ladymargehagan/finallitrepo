@@ -66,11 +66,36 @@ $stats = [
                 <a href="exercises.php?action=new" class="btn-primary">
                     <i class="fas fa-plus"></i> Create New Exercise
                 </a>
-                <a href="languages.php?action=new" class="btn-secondary">
-                    <i class="fas fa-globe"></i> Add Language
-                </a>
+                <button class="btn-secondary" onclick="showModal('newLanguageModal')">
+                    <i class="fas fa-language"></i> New Language
+                </button>
             </div>
         </div>
+
+        <!-- Add Language Modal -->
+        <div id="newLanguageModal" class="modal">
+            <div class="modal-content">
+                <h3>Add New Language</h3>
+                <form id="newLanguageForm" class="modal-form">
+                    <div class="form-group">
+                        <label for="languageName">Language Name</label>
+                        <input type="text" id="languageName" name="languageName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="languageCode">Language Code</label>
+                        <input type="text" id="languageCode" name="languageCode" required 
+                               pattern="[a-z]{2}" title="Two letter language code (e.g., en, es, fr)">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="hideModal('newLanguageModal')">Cancel</button>
+                        <button type="submit" class="btn-primary">Add Language</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add the JavaScript file -->
+        <script src="../../assets/js/admin/languages.js"></script>
     </main>
 </body>
 </html>
