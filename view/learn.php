@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../config/db_connect.php';
+require_once '../actions/ProficiencyTracker.php';
 
 // Enable error reporting for debugging
 error_reporting(E_ALL);
@@ -158,33 +159,31 @@ if ($exercise) {
     error_log("DEBUG: Word bank results: " . json_encode($wordBank));
 }
 
-// Get progress statistics
-$stmt = $pdo->prepare("
-    SELECT 
-        COUNT(*) as total_words,
-        (SELECT COUNT(*) 
-         FROM learned_words lw 
-         JOIN words w ON lw.wordId = w.wordId 
-         WHERE w.languageId = ? 
-         AND w.categoryId = ? 
-         AND lw.userId = ?) as learned_words
-    FROM words 
-    WHERE languageId = ? 
-    AND categoryId = ?
-");
-$stmt->execute([
-    $languageId, 
-    $exercise['categoryId'], 
-    $_SESSION['user_id'],
-    $languageId,
-    $exercise['categoryId']
-]);
-$progress = $stmt->fetch(PDO::FETCH_ASSOC);
+// Initialize proficiency tracker
+$proficiencyTracker = new ProficiencyTracker($pdo, $_SESSION['user_id']);
+$progress = $proficiencyTracker->getProgress();
 
 // Calculate progress percentage
 $progressPercent = $progress['total_words'] > 0 
     ? ($progress['learned_words'] / $progress['total_words']) * 100 
     : 0;
+
+// Add this near your other queries
+$stmt = $pdo->prepare("
+    SELECT COUNT(*) as total 
+    FROM exercise_sets 
+    WHERE wordId IN (
+        SELECT wordId 
+        FROM words 
+        WHERE languageId = ? AND categoryId = (
+            SELECT categoryId 
+            FROM word_categories 
+            WHERE categorySlug = ?
+        )
+    )
+");
+$stmt->execute([$languageId, $categorySlug]);
+$totalExercises = $stmt->fetchColumn();
 ?>
 
 <!DOCTYPE html>
@@ -197,6 +196,7 @@ $progressPercent = $progress['total_words'] > 0
     <link rel="stylesheet" href="../assets/css/styles.css">
     <link rel="stylesheet" href="../assets/css/learn.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <style>
         .modal {
             display: none;
@@ -327,11 +327,29 @@ $progressPercent = $progress['total_words'] > 0
         </div>
     </div>
     <?php else: ?>
-        <div class="progress-container">
-            <div class="progress-bar">
-                <div class="progress" style="width: <?php echo $progressPercent; ?>%"></div>
+        <div class="learning-progress-floating">
+            <div class="progress-inner">
+                <div class="progress-stats">
+                    <div class="progress-text">
+                        Learning Progress: <?php echo round($progress['progress']); ?>%
+                    </div>
+                    <div class="proficiency-counts">
+                        <span class="learning">Learning: <?php echo $progress['counts']['learning_count']; ?></span>
+                        <span class="familiar">Familiar: <?php echo $progress['counts']['familiar_count']; ?></span>
+                        <span class="mastered">Mastered: <?php echo $progress['counts']['mastered_count']; ?></span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: <?php echo $progress['progress']; ?>%"></div>
+                    </div>
+                </div>
+                <div class="hearts-display">
+                    <?php for($i = 0; $i < 3; $i++): ?>
+                        <div class="heart">
+                            <i class='bx bxs-heart'></i>
+                        </div>
+                    <?php endfor; ?>
+                </div>
             </div>
-            <div class="hearts"></div>
         </div>
 
         <div class="tips-container">

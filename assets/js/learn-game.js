@@ -9,9 +9,7 @@ class LearnGame {
         this.initializeElements();
         this.setupEventListeners();
         this.initializeExercise();
-        
-        // Add tips functionality
-        this.initializeTips();
+        this.initializeProgress();
     }
 
     initializeElements() {
@@ -21,28 +19,33 @@ class LearnGame {
             wordBank: document.getElementById('wordBank'),
             checkButton: document.getElementById('checkBtn'),
             questionText: document.querySelector('.question'),
-            exerciseType: document.querySelector('.exercise-type')
+            exerciseType: document.querySelector('.exercise-type'),
+            progressElements: {
+                bar: document.querySelector('.progress-fill'),
+                percentage: document.querySelector('.progress-text'),
+                learning: document.querySelector('.learning'),
+                familiar: document.querySelector('.familiar'),
+                mastered: document.querySelector('.mastered')
+            }
         };
+        
+        this.currentProgress = parseFloat(this.elements.progressElements.bar.style.width) || 0;
     }
 
     setupEventListeners() {
-        // Setup drag and drop
         this.setupDragAndDrop();
         
-        // Check button click
         if (this.elements.checkButton) {
             this.elements.checkButton.addEventListener('click', () => this.checkAnswer());
         }
     }
 
     initializeExercise() {
-        // Get exercise data from the page
         this.currentExercise = {
             id: this.courseData.dataset.exerciseId,
             type: this.courseData.dataset.type
         };
         
-        // Initialize word bank tiles
         const wordTiles = document.querySelectorAll('.word-tile');
         wordTiles.forEach(tile => {
             tile.draggable = true;
@@ -54,30 +57,47 @@ class LearnGame {
         const answerBox = this.elements.answerBox;
         const wordBank = this.elements.wordBank;
 
-        // Answer box drop handling
+        // Double-click to return words
+        answerBox.addEventListener('dblclick', (e) => {
+            const tile = e.target.closest('.word-tile');
+            if (tile) {
+                wordBank.appendChild(tile);
+            }
+        });
+
+        // Drag within answer box for reordering
         answerBox.addEventListener('dragover', (e) => {
             e.preventDefault();
+            const draggingTile = document.querySelector('.dragging');
+            if (!draggingTile) return;
+
+            const siblings = [...answerBox.querySelectorAll('.word-tile:not(.dragging)')];
+            const nextSibling = siblings.find(sibling => {
+                const box = sibling.getBoundingClientRect();
+                return e.clientX <= box.left + box.width / 2;
+            });
+
+            if (nextSibling) {
+                answerBox.insertBefore(draggingTile, nextSibling);
+            } else {
+                answerBox.appendChild(draggingTile);
+            }
+        });
+
+        // Word bank drop handling
+        wordBank.addEventListener('dragover', (e) => e.preventDefault());
+        answerBox.addEventListener('dragover', (e) => e.preventDefault());
+
+        wordBank.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const tile = document.querySelector('.dragging');
+            if (tile) wordBank.appendChild(tile);
         });
 
         answerBox.addEventListener('drop', (e) => {
             e.preventDefault();
             const tile = document.querySelector('.dragging');
-            if (tile) {
-                answerBox.appendChild(tile);
-            }
-        });
-
-        // Word bank drop handling
-        wordBank.addEventListener('dragover', (e) => {
-            e.preventDefault();
-        });
-
-        wordBank.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const tile = document.querySelector('.dragging');
-            if (tile) {
-                wordBank.appendChild(tile);
-            }
+            if (tile) answerBox.appendChild(tile);
         });
     }
 
@@ -86,10 +106,83 @@ class LearnGame {
         tile.classList.add('dragging');
         e.dataTransfer.setData('text/plain', '');
         
-        // Remove dragging class when drag ends
         tile.addEventListener('dragend', () => {
             tile.classList.remove('dragging');
         }, { once: true });
+    }
+
+    initializeProgress() {
+        this.progressElements = {
+            bar: document.querySelector('.progress-fill'),
+            percentage: document.querySelector('.progress-text'),
+            learning: document.querySelector('.learning'),
+            familiar: document.querySelector('.familiar'),
+            mastered: document.querySelector('.mastered')
+        };
+
+        // Initialize progress animation
+        this.currentProgress = parseFloat(this.progressElements.bar.style.width) || 0;
+    }
+
+    updateProgress(progressData) {
+        const newProgress = progressData.progress;
+        const counts = progressData.counts;
+
+        // Animate progress bar
+        this.animateProgress(this.currentProgress, newProgress);
+        this.currentProgress = newProgress;
+
+        // Update counts with animation
+        this.animateCount(this.progressElements.learning, counts.learning_count);
+        this.animateCount(this.progressElements.familiar, counts.familiar_count);
+        this.animateCount(this.progressElements.mastered, counts.mastered_count);
+
+        // Update percentage text
+        this.progressElements.percentage.textContent = 
+            `Learning Progress: ${Math.round(newProgress)}%`;
+    }
+
+    animateProgress(start, end) {
+        const duration = 1000; // 1 second
+        const startTime = performance.now();
+        
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            const current = start + (end - start) * this.easeOutQuad(progress);
+            this.progressElements.bar.style.width = `${current}%`;
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
+
+    animateCount(element, newValue) {
+        const currentValue = parseInt(element.textContent.match(/\d+/)[0]);
+        const duration = 1000;
+        const startTime = performance.now();
+
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            const current = Math.round(currentValue + (newValue - currentValue) * this.easeOutQuad(progress));
+            element.textContent = element.textContent.replace(/\d+/, current);
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
+
+    easeOutQuad(t) {
+        return t * (2 - t);
     }
 
     async checkAnswer() {
@@ -114,7 +207,8 @@ class LearnGame {
             
             if (data.success) {
                 if (data.correct) {
-                    this.handleCorrectAnswer();
+                    this.progressData = data.progress;
+                    this.showResultModal(true);
                 } else {
                     this.handleWrongAnswer(data.hint);
                 }
@@ -127,49 +221,116 @@ class LearnGame {
         }
     }
 
-    handleCorrectAnswer() {
-        // Show success message
-        this.showMessage('Correct!', 'success');
+    showResultModal(isCorrect) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
         
-        // Reload page after delay to get next exercise
+        const modal = document.createElement('div');
+        modal.className = 'result-modal';
+        
+        const content = `
+            <div class="result-icon ${isCorrect ? 'correct' : 'incorrect'}">
+                ${isCorrect ? '✓' : '✗'}
+            </div>
+            <div class="result-message">
+                ${isCorrect ? 'Correct!' : 'Try again!'}
+            </div>
+            <button class="modal-button">
+                ${isCorrect ? 'Continue' : 'OK'}
+            </button>
+        `;
+        
+        modal.innerHTML = content;
+        
+        document.body.appendChild(overlay);
+        document.body.appendChild(modal);
+        
         setTimeout(() => {
-            window.location.reload();
-        }, 1000);
+            overlay.classList.add('show');
+            modal.classList.add('show');
+        }, 10);
+        
+        const button = modal.querySelector('.modal-button');
+        
+        if (isCorrect) {
+            button.onclick = () => {
+                if (this.progressData) {
+                    this.updateProgress(this.progressData);
+                }
+                
+                overlay.classList.remove('show');
+                modal.classList.remove('show');
+                
+                setTimeout(() => {
+                    overlay.remove();
+                    modal.remove();
+                    // Get the current URL and reload with a new exercise
+                    const currentUrl = new URL(window.location.href);
+                    window.location.href = currentUrl.toString();
+                }, 300);
+            };
+        } else {
+            button.onclick = () => {
+                overlay.classList.remove('show');
+                modal.classList.remove('show');
+                setTimeout(() => {
+                    overlay.remove();
+                    modal.remove();
+                }, 300);
+            };
+        }
+    }
+
+    handleCorrectAnswer() {
+        // Progress update happens in showResultModal's continue button click handler
+        this.showResultModal(true);
     }
 
     handleWrongAnswer(hint) {
         this.hearts--;
         this.updateHearts();
-        this.showMessage(hint || 'Try again!', 'error');
+        this.showResultModal(false);
         
         if (this.hearts <= 0) {
             this.gameOver();
         }
     }
 
-    updateHearts() {
-        if (this.elements.hearts) {
-            this.elements.hearts.textContent = '❤️'.repeat(this.hearts);
-        }
-    }
+    showProficiencyLevel(level) {
+        const levelColors = {
+            learning: '#FFA726',  // Orange
+            familiar: '#66BB6A',  // Green
+            mastered: '#42A5F5'   // Blue
+        };
 
-    showMessage(message, type) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${type}`;
-        messageDiv.textContent = message;
-        document.body.appendChild(messageDiv);
+        const notification = document.createElement('div');
+        notification.className = 'proficiency-notification';
+        notification.innerHTML = `
+            <div class="level-icon">
+                <i class='bx ${this.getProficiencyIcon(level)}'></i>
+            </div>
+            <div class="level-text">
+                Word Proficiency: ${level.charAt(0).toUpperCase() + level.slice(1)}
+            </div>
+        `;
+
+        document.body.appendChild(notification);
         
+        // Trigger animation
+        setTimeout(() => notification.classList.add('show'), 100);
         setTimeout(() => {
-            messageDiv.remove();
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
         }, 2000);
     }
 
-    gameOver() {
-        // Show game over message and reload page
-        this.showMessage('Game Over!', 'error');
-        setTimeout(() => {
-            window.location.reload();
-        }, 2000);
+    getProficiencyIcon(level) {
+        switch(level) {
+            case 'learning': return 'bx-book-reader';
+            case 'familiar': return 'bx-book-bookmark';
+            case 'mastered': return 'bx-crown';
+            default: return 'bx-book';
+        }
     }
 
     initializeTips() {
@@ -184,9 +345,10 @@ class LearnGame {
             });
         }
     }
+
+    // ... (keep your existing utility methods)
 }
 
-// Initialize the game when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new LearnGame();
 });

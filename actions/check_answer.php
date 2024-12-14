@@ -10,6 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 
 try {
     require_once '../config/db_connect.php';
+    require_once 'ProficiencyTracker.php';
 
     $input = json_decode(file_get_contents('php://input'), true);
     
@@ -40,31 +41,27 @@ try {
     // Compare with user answer
     $isCorrect = (trim($input['answer']) === trim($correctAnswer));
 
-    if ($isCorrect) {
-        // Get wordId for the exercise
-        $stmt = $pdo->prepare("SELECT wordId FROM exercise_sets WHERE exerciseId = ?");
-        $stmt->execute([$input['exerciseId']]);
-        $wordId = $stmt->fetchColumn();
+    // Get wordId for the exercise
+    $stmt = $pdo->prepare("SELECT wordId FROM exercise_sets WHERE exerciseId = ?");
+    $stmt->execute([$input['exerciseId']]);
+    $wordId = $stmt->fetchColumn();
 
-        // Update user progress
-        $stmt = $pdo->prepare("
-            INSERT INTO learned_words 
-                (userId, wordId, proficiency, learnedDate) 
-            VALUES (?, ?, 'learning', CURRENT_TIMESTAMP)
-            ON DUPLICATE KEY UPDATE 
-                proficiency = CASE 
-                    WHEN proficiency = 'learning' THEN 'familiar'
-                    WHEN proficiency = 'familiar' THEN 'mastered'
-                    ELSE proficiency
-                END
-        ");
-        $stmt->execute([$_SESSION['user_id'], $wordId]);
-    }
+    // Initialize proficiency tracker and record attempt
+    $proficiencyTracker = new ProficiencyTracker($pdo, $_SESSION['user_id']);
+    $proficiencyTracker->recordAttempt($wordId, $isCorrect);
+    
+    // Get updated progress for response
+    $progress = $proficiencyTracker->getProgress();
 
     echo json_encode([
         'success' => true,
         'correct' => $isCorrect,
-        'hint' => $isCorrect ? null : 'Check word order'
+        'hint' => $isCorrect ? null : 'Check word order',
+        'progress' => $progress,
+        'proficiency' => [
+            'counts' => $progress['counts'],
+            'total' => $progress['total_words']
+        ]
     ]);
 
 } catch (Exception $e) {

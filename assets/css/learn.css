@@ -10,14 +10,17 @@
     justify-content: space-between;
     align-items: center;
     z-index: 1000;
+    width: 150px;
+    height: 8px;
+    background: var(--gray-light);
+    border-radius: 4px;
+    overflow: hidden;
 }
 
 .progress-bar {
-    background-color: var(--gray-light);
-    height: 8px;
-    border-radius: 4px;
-    overflow: hidden;
-    margin: 1rem 0;
+    height: 100%;
+    background: var(--ucla-blue);
+    transition: width 0.3s ease;
 }
 
 .progress {
@@ -259,3 +262,371 @@
     from { opacity: 0; }
     to { opacity: 1; }
 } 
+
+.result-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.7);
+    background: white;
+    padding: 30px 50px;
+    border-radius: 15px;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    text-align: center;
+}
+
+.result-modal.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.result-modal.correct {
+    background: #e7f7e7;
+    border: 2px solid #28a745;
+}
+
+.result-modal.wrong {
+    background: #ffe7e7;
+    border: 2px solid #dc3545;
+}
+
+.result-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.result-message {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Animation keyframes */
+@keyframes popIn {
+    0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
+    45% { transform: translate(-50%, -50%) scale(1.05); opacity: 0.8; }
+    80% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.9; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+} 
+
+.modal-button {
+    margin-top: 20px;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    transform: scale(0.9);
+    opacity: 0;
+    animation: buttonPop 0.3s ease 0.5s forwards;
+}
+
+.correct .modal-button {
+    background: #28a745;
+    color: white;
+}
+
+.correct .modal-button:hover {
+    background: #218838;
+}
+
+.wrong .modal-button {
+    background: #dc3545;
+    color: white;
+}
+
+.wrong .modal-button:hover {
+    background: #c82333;
+}
+
+@keyframes buttonPop {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+} 
+
+/* Add these styles for hearts and progress display */
+.game-status {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: var(--white);
+    padding: 12px 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 100;
+}
+
+.hearts-container {
+    display: flex;
+    gap: 8px;
+}
+
+.heart {
+    font-size: 28px;
+    color: var(--coral);
+    transition: all 0.3s ease;
+}
+
+.heart.empty {
+    opacity: 0.3;
+}
+
+/* Add box icon styles */
+.heart i {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+}
+
+/* Animation for heart loss */
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* Make sure hearts are visible */
+.heart i.bxs-heart {
+    color: var(--coral);
+}
+
+.heart i.bx-heart {
+    color: var(--gray);
+}
+
+/* Add these styles to your existing learn.css */
+.learning-progress-floating {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: var(--white);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.learning-progress-floating .progress-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progress-stats {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.progress-text {
+    color: var(--black);
+    font-family: var(--font-heading);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.progress-bar {
+    height: 6px;
+    background: var(--gray-light);
+    border-radius: 3px;
+    overflow: hidden;
+    width: 200px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--ucla-blue);
+    width: 0;
+    transition: width 0.3s ease;
+}
+
+.hearts-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .learning-progress-floating .progress-inner {
+        padding: 0.5rem 0.8rem;
+    }
+
+    .progress-text {
+        font-size: 0.8rem;
+    }
+
+    .progress-bar {
+        height: 4px;
+        width: 150px;
+    }
+}
+
+/* Add to existing learn.css */
+.proficiency-counts {
+    display: flex;
+    gap: 15px;
+    font-size: 0.9rem;
+}
+
+.proficiency-counts span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.proficiency-counts .learning { color: var(--coral); }
+.proficiency-counts .familiar { color: var(--ucla-blue); }
+.proficiency-counts .mastered { color: #28a745; }
+
+.proficiency-notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transform: translateX(120%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.proficiency-notification.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.level-icon {
+    font-size: 24px;
+    color: var(--ucla-blue);
+}
+
+.level-text {
+    font-weight: 500;
+    color: var(--black);
+}
+
+/* Progress bar animation */
+.progress-fill {
+    transition: width 0.3s ease;
+    background: linear-gradient(90deg, 
+        var(--ucla-blue) 0%, 
+        var(--coral) 100%
+    );
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+    backdrop-filter: blur(3px);
+}
+
+.result-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    text-align: center;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1001;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    min-width: 300px;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+}
+
+.result-modal.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.result-icon {
+    font-size: 64px;
+    margin-bottom: 1.5rem;
+    line-height: 1;
+}
+
+.result-icon.correct {
+    color: #28a745;
+}
+
+.result-icon.incorrect {
+    color: #dc3545;
+}
+
+.result-message {
+    font-size: 28px;
+    margin-bottom: 2rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.modal-button {
+    padding: 0.8rem 2.5rem;
+    font-size: 18px;
+    border: none;
+    border-radius: 8px;
+    background: var(--ucla-blue);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    min-width: 160px;
+}
+
+.modal-button:hover {
+    background: var(--ucla-blue-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-button:active {
+    transform: translateY(0);
+}
