@@ -1,95 +1,145 @@
 class ExerciseCreator {
     constructor() {
-        this.initializeElements();
-        this.setupEventListeners();
+        this.init();
         this.loadExistingExercises();
     }
 
-    initializeElements() {
-        this.answerBox = document.getElementById('answerBox');
-        this.wordBank = document.getElementById('wordBank');
-        this.wordInput = document.querySelector('.word-input');
-        this.addWordBtn = document.querySelector('.add-word-btn');
-        this.saveBtn = document.getElementById('saveExercise');
-        this.exerciseGrid = document.getElementById('exerciseGrid');
+    init() {
+        this.loadWords();
+        this.loadBankWords();
+        this.setupEventListeners();
+        this.setupExistingExercisesFilter();
+    }
+
+    setupExistingExercisesFilter() {
+        const filterSelect = document.getElementById('filterLanguage');
+        if (filterSelect) {
+            filterSelect.addEventListener('change', () => {
+                this.loadExistingExercises(filterSelect.value);
+            });
+        }
+    }
+
+    async loadWords() {
+        try {
+            const response = await fetch('../../actions/admin/get_words.php');
+            const data = await response.json();
+            if (data.success) {
+                const wordSelect = document.getElementById('wordSelect');
+                data.words.forEach(word => {
+                    const option = document.createElement('option');
+                    option.value = word.wordId;
+                    option.textContent = word.word_text;
+                    wordSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading words:', error);
+        }
+    }
+
+    async loadBankWords() {
+        try {
+            const response = await fetch('../../actions/admin/get_bank_words.php');
+            const data = await response.json();
+            if (data.success) {
+                const bankWordSelect = document.getElementById('bankWordSelect');
+                data.words.forEach(word => {
+                    const option = document.createElement('option');
+                    option.value = word.bankWordId;
+                    option.textContent = word.segment_text;
+                    bankWordSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading bank words:', error);
+        }
     }
 
     setupEventListeners() {
-        this.addWordBtn.addEventListener('click', () => this.addWord());
-        this.wordInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.addWord();
+        document.getElementById('wordSelect').addEventListener('change', (e) => {
+            this.loadTranslations(e.target.value);
         });
-        this.saveBtn.addEventListener('click', () => this.saveExercise());
 
-        // Setup drag and drop
-        this.setupDragAndDrop();
+        document.getElementById('addWordOption').addEventListener('click', () => {
+            this.addWordBankOption();
+        });
+
+        document.getElementById('saveExercise').addEventListener('click', () => {
+            this.saveExercise();
+        });
     }
 
-    addWord() {
-        const word = this.wordInput.value.trim();
-        if (!word) return;
-
-        const wordTile = this.createWordTile(word);
-        document.querySelector('.word-tiles').appendChild(wordTile);
-        this.wordInput.value = '';
-        this.wordInput.focus();
+    async loadTranslations(wordId) {
+        try {
+            const response = await fetch(`../../actions/admin/get_translations.php?wordId=${wordId}`);
+            const data = await response.json();
+            if (data.success) {
+                const translationSelect = document.getElementById('translationSelect');
+                translationSelect.innerHTML = '<option value="">Select translation...</option>';
+                data.translations.forEach(translation => {
+                    const option = document.createElement('option');
+                    option.value = translation.translationId;
+                    option.textContent = translation.translation_text;
+                    translationSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading translations:', error);
+        }
     }
 
-    createWordTile(word) {
-        const tile = document.createElement('div');
-        tile.className = 'word-tile';
-        tile.textContent = word;
-        tile.draggable = true;
+    addWordBankOption() {
+        const bankWordSelect = document.getElementById('bankWordSelect');
+        const selectedOptions = document.getElementById('selectedOptions');
         
-        tile.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('text/plain', word);
-            tile.classList.add('dragging');
-        });
-
-        tile.addEventListener('dragend', () => {
-            tile.classList.remove('dragging');
-        });
-
-        return tile;
-    }
-
-    setupDragAndDrop() {
-        this.answerBox.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            this.answerBox.classList.add('drag-over');
-        });
-
-        this.answerBox.addEventListener('dragleave', () => {
-            this.answerBox.classList.remove('drag-over');
-        });
-
-        this.answerBox.addEventListener('drop', (e) => {
-            e.preventDefault();
-            this.answerBox.classList.remove('drag-over');
-            
-            const word = e.dataTransfer.getData('text/plain');
-            const wordTile = this.createWordTile(word);
-            
-            // Remove placeholder if it exists
-            const placeholder = this.answerBox.querySelector('.placeholder');
-            if (placeholder) placeholder.remove();
-            
-            this.answerBox.appendChild(wordTile);
-        });
+        if (bankWordSelect.value) {
+            const option = bankWordSelect.options[bankWordSelect.selectedIndex];
+            const wordOption = document.createElement('div');
+            wordOption.className = 'word-option';
+            wordOption.innerHTML = `
+                <span>${option.text}</span>
+                <label>
+                    <input type="radio" name="correct_answer" value="${option.value}">
+                    Correct Answer
+                </label>
+                <button class="remove-option">×</button>
+            `;
+            selectedOptions.appendChild(wordOption);
+        }
     }
 
     async saveExercise() {
+        const selectedOptions = document.getElementById('selectedOptions');
+        const wordBankOptions = Array.from(selectedOptions.children).map(option => {
+            const radio = option.querySelector('input[type="radio"]');
+            return {
+                bankWordId: radio.value,
+                isAnswer: radio.checked,
+            };
+        });
+
+        // Check if we have at least one correct answer
+        if (!wordBankOptions.some(option => option.isAnswer)) {
+            alert('Please mark at least one option as the correct answer');
+            return;
+        }
+
         const exerciseData = {
-            languageId: document.getElementById('languageSelect').value,
-            categoryId: document.getElementById('categorySelect').value,
+            wordId: document.getElementById('wordSelect').value,
+            translationId: document.getElementById('translationSelect').value,
+            type: document.getElementById('typeSelect').value,
             difficulty: document.getElementById('difficultySelect').value,
-            questionText: document.getElementById('questionText').value,
-            answer: Array.from(this.answerBox.querySelectorAll('.word-tile'))
-                .map(tile => tile.textContent)
-                .join(' '),
-            wordBank: Array.from(document.querySelectorAll('.word-tiles .word-tile'))
-                .map(tile => tile.textContent)
+            wordBankOptions: wordBankOptions
         };
+
+        // Validate all required fields
+        if (!exerciseData.wordId || !exerciseData.translationId || 
+            !exerciseData.type || !exerciseData.difficulty || 
+            !exerciseData.wordBankOptions.length) {
+            alert('Please fill in all required fields');
+            return;
+        }
 
         try {
             const response = await fetch('../../actions/admin/save_exercise.php', {
@@ -114,42 +164,59 @@ class ExerciseCreator {
         }
     }
 
-    async loadExistingExercises() {
+    async loadExistingExercises(languageId = '') {
         try {
-            const response = await fetch('../../actions/admin/get_exercises.php');
-            const data = await response.json();
+            const response = await fetch(`../../actions/admin/get_exercises.php?languageId=${languageId}`);
+            if (!response.ok) throw new Error('Failed to fetch exercises');
             
-            if (data.success && data.exercises) {
-                this.exerciseGrid.innerHTML = data.exercises
-                    .map(exercise => this.createExerciseCard(exercise))
-                    .join('');
-            } else {
-                console.error('Failed to load exercises:', data.error);
+            const exercises = await response.json();
+            const grid = document.getElementById('exercisesGrid');
+            
+            if (!grid) return;
+            grid.innerHTML = ''; // Clear existing exercises
+
+            if (!exercises.length) {
+                grid.innerHTML = '<p class="no-exercises">No exercises found</p>';
+                return;
             }
+
+            exercises.forEach(exercise => {
+                const card = this.createExerciseCard(exercise);
+                grid.appendChild(card);
+            });
         } catch (error) {
             console.error('Error loading exercises:', error);
+            const grid = document.getElementById('exercisesGrid');
+            if (grid) {
+                grid.innerHTML = '<p class="error-message">Error loading exercises. Please try again.</p>';
+            }
         }
     }
 
     createExerciseCard(exercise) {
-        return `
-            <div class="exercise-card">
-                <h3>${exercise.questionText || 'No question text'}</h3>
-                <div class="meta">
-                    <span>${exercise.languageName || 'Unknown language'}</span>
-                    <span>${exercise.categoryName || 'Unknown category'}</span>
-                    <span>Difficulty: ${exercise.difficulty || 'Not set'}</span>
-                </div>
-                <div class="actions">
-                    <button onclick="exerciseCreator.editExercise(${exercise.exerciseId})" class="btn-secondary">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button onclick="exerciseCreator.deleteExercise(${exercise.exerciseId})" class="btn-danger">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </div>
+        const card = document.createElement('div');
+        card.className = 'exercise-card';
+        card.innerHTML = `
+            <div class="exercise-header">
+                <h3>${exercise.question}</h3>
+                <span class="difficulty-badge ${exercise.difficulty.toLowerCase()}">
+                    ${exercise.difficulty}
+                </span>
+            </div>
+            <div class="exercise-meta">
+                <span class="category">${exercise.categoryName}</span>
+                <span class="language">${exercise.languageName}</span>
+            </div>
+            <div class="exercise-actions">
+                <button onclick="exerciseCreator.editExercise(${exercise.exerciseId})" class="btn btn-secondary">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button onclick="exerciseCreator.deleteExercise(${exercise.exerciseId})" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
             </div>
         `;
+        return card;
     }
 
     resetForm() {
@@ -159,7 +226,7 @@ class ExerciseCreator {
     }
 }
 
-// Initialize the exercise creator when the document loads
+// Initialize the ExerciseCreator when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.exerciseCreator = new ExerciseCreator();
 });

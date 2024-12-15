@@ -20,7 +20,7 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exercise Management - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="../../assets/css/admin/styles.css">
+    <link rel="stylesheet" href="../../assets/css/styles.css">
     <link rel="stylesheet" href="../../assets/css/admin/exercises.css">
 </head>
 <body class="admin-exercises">
@@ -31,24 +31,22 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
         <div class="quick-actions-panel">
             <h2>Quick Actions</h2>
             <div class="action-buttons">
-                <button class="btn-secondary" onclick="showModal('newCategoryModal')">
+                <button class="btn btn-secondary" onclick="showModal('newCategoryModal')">
                     <i class="fas fa-folder-plus"></i> New Category
-                </button>
-                <button class="btn-secondary" onclick="showModal('newLanguageModal')">
-                    <i class="fas fa-language"></i> New Language
                 </button>
             </div>
         </div>
 
+        <!-- Exercise Creator Section -->
         <div class="exercise-creator">
             <div class="toolbar">
-                <button id="prevExercise" class="btn-secondary">
+                <button id="prevExercise" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Previous
                 </button>
-                <button id="newExercise" class="btn-primary">
+                <button id="newExercise" class="btn btn-primary">
                     <i class="fas fa-plus"></i> New Exercise
                 </button>
-                <button id="nextExercise" class="btn-secondary">
+                <button id="nextExercise" class="btn btn-secondary">
                     Next <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
@@ -99,21 +97,35 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
                 </div>
 
                 <div class="form-actions">
-                    <button id="saveExercise" class="btn-primary">
+                    <button id="saveExercise" class="btn btn-primary">
                         <i class="fas fa-save"></i> Save Exercise
                     </button>
                 </div>
             </div>
         </div>
 
-        <div class="exercise-grid">
-            <h2>Existing Exercises</h2>
-            <div class="grid-container" id="exerciseGrid">
+        <!-- Existing Exercises Section -->
+        <div class="existing-exercises">
+            <div class="exercises-header">
+                <h2>Existing Exercises</h2>
+                <select id="filterLanguage" class="language-filter">
+                    <option value="">All Languages</option>
+                    <?php foreach ($languages as $language): ?>
+                        <option value="<?= $language['languageId'] ?>">
+                            <?= htmlspecialchars($language['languageName']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div class="exercises-grid" id="exercisesGrid">
                 <!-- Exercises will be loaded here dynamically -->
             </div>
         </div>
     </main>
 
+    <!-- Include JavaScript -->
     <script src="../../assets/js/admin/exercises.js"></script>
 </body>
 </html>
+

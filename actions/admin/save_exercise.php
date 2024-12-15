@@ -11,74 +11,70 @@ if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
 try {
     $data = json_decode(file_get_contents('php://input'), true);
     
+    // Check for all required fields based on exercise_sets table structure
+    if (!isset($data['wordId']) || 
+        !isset($data['translationId']) || 
+        !isset($data['type']) || 
+        !isset($data['difficulty']) ||
+        !isset($data['wordBankOptions']) || 
+        !is_array($data['wordBankOptions'])) {
+        throw new Exception('Missing required fields');
+    }
+
+    // Begin transaction
     $pdo->beginTransaction();
-    
+
     // Insert into exercise_sets
     $stmt = $pdo->prepare("
-        INSERT INTO exercise_sets (
-            languageId, 
-            categoryId, 
-            difficulty, 
-            type
-        ) VALUES (?, ?, ?, 'translation')
+        INSERT INTO exercise_sets (wordId, translationId, type, difficulty) 
+        VALUES (:wordId, :translationId, :type, :difficulty)
     ");
-    
+
     $stmt->execute([
-        $data['languageId'],
-        $data['categoryId'],
-        $data['difficulty']
+        ':wordId' => $data['wordId'],
+        ':translationId' => $data['translationId'],
+        ':type' => $data['type'],
+        ':difficulty' => $data['difficulty']
     ]);
-    
+
     $exerciseId = $pdo->lastInsertId();
-    
-    // Insert question text into word_bank
+
+    // Insert word bank options
     $stmt = $pdo->prepare("
-        INSERT INTO word_bank (
-            segment_text,
-            languageId
-        ) VALUES (?, ?)
+        INSERT INTO exercise_word_bank (exerciseId, bankWordId, is_answer, position) 
+        VALUES (:exerciseId, :bankWordId, :is_answer, :position)
     ");
-    $stmt->execute([$data['questionText'], $data['languageId']]);
-    $questionBankId = $pdo->lastInsertId();
-    
-    // Insert words into word_bank and exercise_word_bank
-    foreach ($data['wordBank'] as $position => $word) {
-        // Insert word into word_bank
-        $stmt = $pdo->prepare("
-            INSERT INTO word_bank (
-                segment_text,
-                languageId
-            ) VALUES (?, ?)
-        ");
-        $stmt->execute([$word, $data['languageId']]);
-        $bankWordId = $pdo->lastInsertId();
-        
-        // Link word to exercise
-        $stmt = $pdo->prepare("
-            INSERT INTO exercise_word_bank (
-                exerciseId,
-                bankWordId,
-                position,
-                is_answer
-            ) VALUES (?, ?, ?, ?)
-        ");
-        
-        // Check if this word is part of the answer
-        $isAnswer = in_array($word, explode(' ', $data['answer'])) ? 1 : 0;
+
+    foreach ($data['wordBankOptions'] as $index => $option) {
+        if (!isset($option['bankWordId'])) {
+            throw new Exception('Invalid word bank option format');
+        }
         
         $stmt->execute([
-            $exerciseId,
-            $bankWordId,
-            $position,
-            $isAnswer
+            ':exerciseId' => $exerciseId,
+            ':bankWordId' => $option['bankWordId'],
+            ':is_answer' => isset($option['isAnswer']) && $option['isAnswer'] ? 1 : 0,
+            ':position' => $index
         ]);
     }
-    
+
+    // Commit transaction
     $pdo->commit();
-    echo json_encode(['success' => true, 'exerciseId' => $exerciseId]);
-    
+
+    echo json_encode([
+        'success' => true,
+        'exerciseId' => $exerciseId
+    ]);
+
 } catch (Exception $e) {
-    $pdo->rollBack();
+    // Rollback transaction on error
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    echo json_encode([
+        'success' => false,
+        'error' => $e->getMessage()
+    ]);
 } 

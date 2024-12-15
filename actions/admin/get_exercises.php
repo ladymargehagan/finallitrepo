@@ -3,38 +3,39 @@ session_start();
 require_once '../../config/db_connect.php';
 
 if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-    exit();
+    header('HTTP/1.1 403 Forbidden');
+    exit('Unauthorized access');
 }
 
+$languageId = isset($_GET['languageId']) ? $_GET['languageId'] : '';
+
 try {
-    $stmt = $pdo->query("
+    $query = "
         SELECT 
-            es.exerciseId,
-            es.difficulty,
-            l.languageName,
-            wc.categoryName,
-            wb.segment_text as questionText
-        FROM exercise_sets es
-        JOIN words w ON es.wordId = w.wordId
-        JOIN languages l ON w.languageId = l.languageId
-        JOIN word_categories wc ON w.categoryId = wc.categoryId
-        JOIN exercise_word_bank ewb ON es.exerciseId = ewb.exerciseId
-        JOIN word_bank wb ON ewb.bankWordId = wb.bankWordId
-        GROUP BY es.exerciseId
-        ORDER BY es.created_at DESC
-    ");
-    
+            e.exerciseId,
+            e.question,
+            e.difficulty,
+            e.answer,
+            c.categoryName,
+            l.languageName
+        FROM exercise_templates e
+        JOIN word_categories c ON e.categoryId = c.categoryId
+        JOIN languages l ON e.languageId = l.languageId
+        WHERE 1=1
+    ";
+
+    if ($languageId !== '') {
+        $query .= " AND e.languageId = ?";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute([$languageId]);
+    } else {
+        $stmt = $pdo->prepare($query);
+        $stmt->execute();
+    }
+
     $exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    header('Content-Type: application/json');
-    echo json_encode(['success' => true, 'exercises' => $exercises]);
-    
+    echo json_encode($exercises);
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode([
-        'success' => false, 
-        'error' => $e->getMessage()
-    ]);
+    echo json_encode(['error' => 'Error fetching exercises']);
 } 
