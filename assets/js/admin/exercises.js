@@ -2,13 +2,151 @@ class ExerciseCreator {
     constructor() {
         this.init();
         this.loadExistingExercises();
+        this.setupWordBank();
+        this.setupEventListeners();
     }
 
     init() {
-        this.loadWords();
-        this.loadBankWords();
-        this.setupEventListeners();
         this.setupExistingExercisesFilter();
+        this.setupNewCategoryModal();
+    }
+
+    setupWordBank() {
+        const addWordBtn = document.querySelector('.add-word-btn');
+        const wordInput = document.querySelector('.word-input');
+        const wordTiles = document.querySelector('.word-tiles');
+
+        if (addWordBtn && wordInput && wordTiles) {
+            addWordBtn.addEventListener('click', () => {
+                const word = wordInput.value.trim();
+                if (word) {
+                    const tile = document.createElement('div');
+                    tile.className = 'word-tile';
+                    tile.draggable = true;
+                    tile.textContent = word;
+                    wordTiles.appendChild(tile);
+                    wordInput.value = '';
+                    this.setupDragAndDrop(tile);
+                }
+            });
+
+            // Also allow Enter key to add words
+            wordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addWordBtn.click();
+                }
+            });
+        }
+    }
+
+    setupDragAndDrop(tile) {
+        tile.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', tile.textContent);
+            tile.classList.add('dragging');
+        });
+
+        tile.addEventListener('dragend', () => {
+            tile.classList.remove('dragging');
+        });
+
+        const answerBox = document.getElementById('answerBox');
+        if (answerBox) {
+            answerBox.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+
+            answerBox.addEventListener('drop', (e) => {
+                e.preventDefault();
+                
+                // Clear placeholder if it exists
+                const placeholder = answerBox.querySelector('.placeholder');
+                if (placeholder) {
+                    placeholder.remove();
+                }
+
+                const text = e.dataTransfer.getData('text/plain');
+                // Find the tile by iterating through word-tiles and matching text content
+                const draggedTile = Array.from(document.querySelectorAll('.word-tile'))
+                    .find(tile => tile.textContent.trim() === text);
+                
+                if (draggedTile) {
+                    answerBox.appendChild(draggedTile);
+                }
+            });
+        }
+    }
+
+    setupNewCategoryModal() {
+        const showModalBtn = document.querySelector('[onclick="showModal(\'newCategoryModal\')"]');
+        if (showModalBtn) {
+            showModalBtn.addEventListener('click', () => this.showNewCategoryModal());
+        }
+    }
+
+    showNewCategoryModal() {
+        // Create modal if it doesn't exist
+        let modal = document.getElementById('newCategoryModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'newCategoryModal';
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>Add New Category</h3>
+                    <form id="newCategoryForm">
+                        <div class="form-group">
+                            <input type="text" id="categoryName" placeholder="Category Name" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="exerciseCreator.closeModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Category</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // Setup form submission
+            const form = modal.querySelector('#newCategoryForm');
+            form.addEventListener('submit', (e) => this.handleNewCategory(e));
+        }
+        modal.style.display = 'block';
+    }
+
+    closeModal() {
+        const modal = document.getElementById('newCategoryModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    async handleNewCategory(e) {
+        e.preventDefault();
+        const categoryName = document.getElementById('categoryName').value;
+        
+        try {
+            const response = await fetch('../../actions/admin/add_category.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ categoryName })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                // Refresh category select options
+                const select = document.getElementById('categorySelect');
+                const option = document.createElement('option');
+                option.value = data.categoryId;
+                option.textContent = categoryName;
+                select.appendChild(option);
+                this.closeModal();
+            } else {
+                alert(data.error || 'Failed to add category');
+            }
+        } catch (error) {
+            console.error('Error adding category:', error);
+            alert('Failed to add category');
+        }
     }
 
     setupExistingExercisesFilter() {
@@ -57,17 +195,17 @@ class ExerciseCreator {
     }
 
     setupEventListeners() {
-        document.getElementById('wordSelect').addEventListener('change', (e) => {
-            this.loadTranslations(e.target.value);
-        });
-
-        document.getElementById('addWordOption').addEventListener('click', () => {
-            this.addWordBankOption();
-        });
-
-        document.getElementById('saveExercise').addEventListener('click', () => {
-            this.saveExercise();
-        });
+        const saveButton = document.getElementById('saveExercise');
+        console.log('Save button found:', saveButton);
+        if (saveButton) {
+            saveButton.addEventListener('click', (e) => {
+                console.log('Save button clicked');
+                e.preventDefault();
+                this.saveExercise();
+            });
+        } else {
+            console.error('Save button not found in DOM');
+        }
     }
 
     async loadTranslations(wordId) {
@@ -110,57 +248,94 @@ class ExerciseCreator {
     }
 
     async saveExercise() {
-        const selectedOptions = document.getElementById('selectedOptions');
-        const wordBankOptions = Array.from(selectedOptions.children).map(option => {
-            const radio = option.querySelector('input[type="radio"]');
-            return {
-                bankWordId: radio.value,
-                isAnswer: radio.checked,
-            };
-        });
-
-        // Check if we have at least one correct answer
-        if (!wordBankOptions.some(option => option.isAnswer)) {
-            alert('Please mark at least one option as the correct answer');
-            return;
-        }
-
-        const exerciseData = {
-            wordId: document.getElementById('wordSelect').value,
-            translationId: document.getElementById('translationSelect').value,
-            type: document.getElementById('typeSelect').value,
-            difficulty: document.getElementById('difficultySelect').value,
-            wordBankOptions: wordBankOptions
-        };
-
-        // Validate all required fields
-        if (!exerciseData.wordId || !exerciseData.translationId || 
-            !exerciseData.type || !exerciseData.difficulty || 
-            !exerciseData.wordBankOptions.length) {
-            alert('Please fill in all required fields');
-            return;
-        }
-
         try {
+            console.log('Starting save exercise...');
+            const questionText = document.getElementById('questionText').value;
+            const answerBox = document.getElementById('answerBox');
+            const wordTiles = document.querySelector('.word-tiles').children;
+            
+            // Debug logging
+            console.log('Question Text:', questionText);
+            console.log('Answer Box:', answerBox);
+            console.log('Word Tiles:', wordTiles);
+
+            // Validate required fields
+            if (!questionText) {
+                alert('Please enter a question text');
+                return;
+            }
+
+            // Get answer tiles (correct answer)
+            const answerTiles = Array.from(answerBox.children)
+                .filter(el => el.classList.contains('word-tile'));
+            
+            console.log('Answer Tiles:', answerTiles);
+
+            if (!answerTiles.length) {
+                alert('Please create an answer by dragging words to the answer box');
+                return;
+            }
+
+            const exerciseData = {
+                languageId: document.getElementById('languageSelect').value,
+                categoryId: document.getElementById('categorySelect').value,
+                difficulty: document.getElementById('difficultySelect').value,
+                question: questionText,
+                wordBank: [
+                    // The correct answer
+                    {
+                        text: answerTiles[0].textContent.trim(),
+                        isAnswer: true
+                    },
+                    // The distractors
+                    ...Array.from(wordTiles).map(tile => ({
+                        text: tile.textContent.trim(),
+                        isAnswer: false
+                    }))
+                ]
+            };
+
+            // Debug logging
+            console.log('Exercise Data:', exerciseData);
+
+            // Validate required fields
+            if (!exerciseData.languageId || !exerciseData.categoryId || !exerciseData.difficulty) {
+                alert('Please select language, category, and difficulty');
+                return;
+            }
+
+            console.log('Sending request to save_exercise.php...');
             const response = await fetch('../../actions/admin/save_exercise.php', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
-                body: JSON.stringify(exerciseData)
+                body: JSON.stringify(exerciseData),
+                credentials: 'include' // Include cookies if using sessions
             });
 
+            console.log('Response received:', response);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server response:', errorText);
+                throw new Error(`Server returned ${response.status}: ${errorText}`);
+            }
+            
             const result = await response.json();
+            console.log('Parsed result:', result);
+
             if (result.success) {
                 alert('Exercise saved successfully!');
-                this.loadExistingExercises();
+                await this.loadExistingExercises();
                 this.resetForm();
             } else {
-                alert('Error saving exercise: ' + result.error);
+                throw new Error(result.error || 'Failed to save exercise');
             }
         } catch (error) {
-            console.error('Error:', error);
-            alert('Failed to save exercise');
+            console.error('Error saving exercise:', error);
+            alert('Error saving exercise: ' + error.message);
         }
     }
 
@@ -220,9 +395,15 @@ class ExerciseCreator {
     }
 
     resetForm() {
-        document.getElementById('questionText').value = '';
-        this.answerBox.innerHTML = '<div class="placeholder">Drag word tiles here to create the correct answer</div>';
-        document.querySelector('.word-tiles').innerHTML = '';
+        const questionText = document.getElementById('questionText');
+        const answerBox = document.getElementById('answerBox');
+        const wordTiles = document.querySelector('.word-tiles');
+
+        if (questionText) questionText.value = '';
+        if (answerBox) {
+            answerBox.innerHTML = '<div class="placeholder">Drag word tiles here to create the correct answer</div>';
+        }
+        if (wordTiles) wordTiles.innerHTML = '';
     }
 }
 

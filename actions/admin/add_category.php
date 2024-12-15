@@ -2,30 +2,30 @@
 session_start();
 require_once '../../config/db_connect.php';
 
+header('Content-Type: application/json');
+
 if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
-    http_response_code(401);
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
-    exit();
+    exit;
+}
+
+$data = json_decode(file_get_contents('php://input'), true);
+$categoryName = $data['categoryName'] ?? '';
+
+if (empty($categoryName)) {
+    echo json_encode(['success' => false, 'error' => 'Category name is required']);
+    exit;
 }
 
 try {
-    $categoryName = $_POST['categoryName'];
-    $description = $_POST['categoryDescription'];
-    $categorySlug = strtolower(preg_replace('/[^A-Za-z0-9-]+/', '-', $categoryName));
+    $stmt = $pdo->prepare("INSERT INTO word_categories (categoryName) VALUES (?)");
+    $stmt->execute([$categoryName]);
     
-    $stmt = $pdo->prepare("
-        INSERT INTO word_categories (
-            categoryName, 
-            categorySlug, 
-            description
-        ) VALUES (?, ?, ?)
-    ");
-    
-    $stmt->execute([$categoryName, $categorySlug, $description]);
-    
-    echo json_encode(['success' => true, 'categoryId' => $pdo->lastInsertId()]);
-    
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    echo json_encode([
+        'success' => true,
+        'categoryId' => $pdo->lastInsertId(),
+        'message' => 'Category added successfully'
+    ]);
+} catch (PDOException $e) {
+    echo json_encode(['success' => false, 'error' => 'Database error']);
 } 

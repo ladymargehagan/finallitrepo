@@ -2,40 +2,40 @@
 session_start();
 require_once '../../config/db_connect.php';
 
-if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
-    header('HTTP/1.1 403 Forbidden');
-    exit('Unauthorized access');
-}
-
-$languageId = isset($_GET['languageId']) ? $_GET['languageId'] : '';
+header('Content-Type: application/json');
 
 try {
+    $languageId = isset($_GET['languageId']) ? $_GET['languageId'] : '';
+    
     $query = "
         SELECT 
-            e.exerciseId,
-            e.question,
-            e.difficulty,
-            e.answer,
-            c.categoryName,
+            es.exerciseId,
+            w.word as question,
+            w.difficulty,
+            wc.categoryName,
             l.languageName
-        FROM exercise_templates e
-        JOIN word_categories c ON e.categoryId = c.categoryId
-        JOIN languages l ON e.languageId = l.languageId
-        WHERE 1=1
+        FROM exercise_sets es
+        JOIN words w ON es.wordId = w.wordId
+        JOIN word_categories wc ON w.categoryId = wc.categoryId
+        JOIN languages l ON w.languageId = l.languageId
     ";
-
-    if ($languageId !== '') {
-        $query .= " AND e.languageId = ?";
-        $stmt = $pdo->prepare($query);
+    
+    if ($languageId) {
+        $query .= " WHERE w.languageId = ?";
+    }
+    
+    $stmt = $pdo->prepare($query);
+    
+    if ($languageId) {
         $stmt->execute([$languageId]);
     } else {
-        $stmt = $pdo->prepare($query);
         $stmt->execute();
     }
-
+    
     $exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode($exercises);
-} catch (Exception $e) {
+    
+} catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Error fetching exercises']);
+    echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
 } 

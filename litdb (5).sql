@@ -950,7 +950,7 @@ ALTER TABLE `exercise_templates`
 -- Constraints for table `exercise_word_bank`
 --
 ALTER TABLE `exercise_word_bank`
-  ADD CONSTRAINT `exercise_word_bank_ibfk_1` FOREIGN KEY (`exerciseId`) REFERENCES `exercise_sets` (`exerciseId`),
+  ADD CONSTRAINT `exercise_word_bank_ibfk_1` FOREIGN KEY (`exerciseId`) REFERENCES `exercise_templates` (`templateId`),
   ADD CONSTRAINT `exercise_word_bank_ibfk_2` FOREIGN KEY (`bankWordId`) REFERENCES `word_bank` (`bankWordId`);
 
 --
