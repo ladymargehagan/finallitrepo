@@ -33,19 +33,15 @@ $recentActivity = $pdo->query("
     SELECT 
         u.firstName,
         u.lastName,
-        es.sessionId,
-        es.startTime,
-        es.totalWords,
-        es.correctWords,
         l.languageName,
-        wc.categoryName
-    FROM exercise_sessions es
-    JOIN users u ON es.userId = u.id
-    JOIN exercise_sets e ON es.exerciseSetId = e.exerciseId
-    JOIN words w ON e.wordId = w.wordId
-    JOIN languages l ON w.languageId = l.languageId
-    JOIN word_categories wc ON w.categoryId = wc.categoryId
-    ORDER BY es.startTime DESC
+        wc.categoryName,
+        ue.enrollmentDate as startTime
+    FROM user_enrollments ue
+    JOIN users u ON ue.userId = u.id
+    JOIN languages l ON ue.languageId = l.languageId
+    JOIN word_categories wc ON wc.categoryId = wc.categoryId
+    WHERE ue.status = 'active'
+    ORDER BY ue.enrollmentDate DESC
     LIMIT 10
 ")->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -123,24 +119,21 @@ $recentActivity = $pdo->query("
                     <?php else: ?>
                         <?php foreach ($recentActivity as $activity): ?>
                             <div class="activity-item">
-                                <div class="activity-status <?php echo ($activity['correctWords'] / $activity['totalWords'] >= 0.7) ? 'success' : 'progress'; ?>">
-                                    <i class="fas fa-<?php echo ($activity['correctWords'] / $activity['totalWords'] >= 0.7) ? 'star' : 'spinner'; ?>"></i>
+                                <div class="activity-status">
+                                    <i class="fas fa-book-reader"></i>
                                 </div>
                                 <div class="activity-details">
                                     <p class="activity-text">
                                         <span class="user-name">
                                             <?php echo htmlspecialchars($activity['firstName'] . ' ' . $activity['lastName']); ?>
                                         </span>
-                                        completed 
-                                        <span class="exercise-name">
-                                            <?php echo htmlspecialchars($activity['categoryName']); ?>
-                                        </span>
-                                        exercise in
+                                        studied 
                                         <span class="language-name">
                                             <?php echo htmlspecialchars($activity['languageName']); ?>
                                         </span>
-                                        <span class="score">
-                                            (<?php echo $activity['mastered_words']; ?> words mastered)
+                                        in category
+                                        <span class="category-name">
+                                            <?php echo htmlspecialchars($activity['categoryName']); ?>
                                         </span>
                                     </p>
                                     <span class="activity-time">
