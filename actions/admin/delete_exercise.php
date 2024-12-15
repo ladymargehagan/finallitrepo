@@ -15,11 +15,15 @@ try {
     
     $pdo->beginTransaction();
 
-    // Delete from exercise_word_bank first (foreign key constraint)
+    // Delete from exercise_sessions first
+    $stmt = $pdo->prepare("DELETE FROM exercise_sessions WHERE exerciseSetId = ?");
+    $stmt->execute([$exerciseId]);
+
+    // Then delete from exercise_word_bank
     $stmt = $pdo->prepare("DELETE FROM exercise_word_bank WHERE exerciseId = ?");
     $stmt->execute([$exerciseId]);
 
-    // Delete from exercise_sets
+    // Finally delete from exercise_sets
     $stmt = $pdo->prepare("DELETE FROM exercise_sets WHERE exerciseId = ?");
     $stmt->execute([$exerciseId]);
 
