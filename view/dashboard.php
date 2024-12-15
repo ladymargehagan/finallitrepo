@@ -30,7 +30,7 @@ $stmt = $pdo->prepare("
         FROM user_enrollments 
         WHERE userId = ? AND status = 'active'
     )
-    AND languageName IN ('French', 'Spanish', 'German')
+    AND active = 1
 ");
 $stmt->execute([$_SESSION['user_id']]);
 $availableCourses = $stmt->fetchAll();
