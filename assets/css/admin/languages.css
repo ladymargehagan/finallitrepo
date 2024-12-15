@@ -86,49 +86,164 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.6);
     z-index: 1000;
+    backdrop-filter: blur(4px);
 }
 
 .modal-content {
     background: var(--white);
-    margin: 10% auto;
-    padding: 20px;
-    border-radius: 10px;
+    margin: 5% auto;
+    padding: 2rem;
+    border-radius: 16px;
     width: 90%;
     max-width: 500px;
     position: relative;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    animation: modalSlideIn 0.3s ease-out;
 }
 
-.form-group {
-    margin-bottom: 20px;
+/* Delete Modal Specific Styles */
+.modal-content h2 {
+    color: var(--ucla-blue);
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    padding-right: 2rem;
 }
 
-.form-group label {
+.warning-message {
+    margin-bottom: 2rem;
+}
+
+.warning-message i {
+    color: #dc3545;
+    font-size: 2rem;
+    margin-bottom: 1rem;
     display: block;
-    margin-bottom: 5px;
+}
+
+.warning-message p {
+    color: #dc3545;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+.warning-message ul {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
     color: var(--gray);
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.warning-message li {
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.confirmation-input {
+    margin: 1.5rem 0;
+}
+
+.confirmation-input label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--gray);
+    font-weight: 500;
+}
+
+.confirmation-input input {
     width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--gray-light);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
 }
 
-.form-group textarea {
-    height: 100px;
-    resize: vertical;
+.confirmation-input input:focus {
+    outline: none;
+    border-color: var(--ucla-blue);
+    box-shadow: 0 0 0 3px rgba(34, 116, 165, 0.1);
 }
 
-.form-actions {
+.confirmation-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.confirmation-actions button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-family: var(--font-body);
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.btn-secondary {
+    background-color: var(--mindaro);
+    color: var(--ucla-blue);
+}
+
+.btn-danger {
+    background-color: var(--coral);
+    color: var(--white);
+}
+
+.btn-secondary:hover {
+    background-color: var(--ucla-blue);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 116, 165, 0.15);
+}
+
+.btn-danger:hover {
+    background-color: #e67344;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(239, 131, 84, 0.2);
+}
+
+/* Close button */
+.close {
+    position: absolute;
+    right: 1.5rem;
+    top: 1.5rem;
+    font-size: 1.5rem;
+    color: var(--gray);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.close:hover {
+    color: var(--ucla-blue);
+    transform: rotate(90deg);
+}
+
+/* Modal Animation */
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-10%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Error message styling */
+.error-message {
+    color: #dc3545;
+    background: #ffe0e3;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    display: none;
 }
 
 /* Add this to your existing CSS */
