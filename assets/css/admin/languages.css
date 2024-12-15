@@ -12,6 +12,9 @@
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
 }
 
 .language-card:hover {
@@ -48,12 +51,31 @@
     color: var(--gray);
     margin-bottom: 20px;
     min-height: 60px;
+    flex-grow: 1;
 }
 
 .language-actions {
     display: flex;
-    gap: 10px;
-    justify-content: flex-end;
+    gap: 8px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: auto;
+}
+
+.language-actions .btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.language-actions .btn i {
+    font-size: 0.9em;
 }
 
 /* Modal Styles */
