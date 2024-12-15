@@ -117,8 +117,6 @@ $availableCourses = $stmt->fetchAll();
         </section>
     </main>
 
-    <!-- Footer -->
-    <?php include '../includes/footer.php'; ?>
 
     <!-- Add JavaScript for enrollment -->
     <script>

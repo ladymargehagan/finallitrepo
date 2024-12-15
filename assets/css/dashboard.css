@@ -200,42 +200,92 @@
 }
 
 .course-card {
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 1px solid rgba(0,0,0,0.08);
-    transition: all 0.2s ease;
+    background: var(--white);
+    border-radius: 16px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.03);
+    box-shadow: 0 2px 15px rgba(0,0,0,0.03);
 }
 
 .course-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    border-color: rgba(0,0,0,0);
 }
 
-.course-card h3 {
-    font-size: 1.1rem;
+.course-title {
+    font-size: 1.5rem;
+    color: var(--ucla-blue);
     margin-bottom: 1rem;
-    color: var(--black);
+    font-weight: 600;
+}
+
+.course-level {
+    font-size: 1rem;
+    color: var(--gray);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.course-description {
+    color: var(--gray);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.continue-learning {
+    background-color: var(--ucla-blue);
+    color: var(--white);
+    padding: 0.8rem 1.5rem;
+    border-radius: 12px;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.continue-learning:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
 }
 
 .progress-bar {
+    background: #f0f0f0;
     height: 8px;
-    background-color: var(--gray-light);
     border-radius: 4px;
-    margin-bottom: 0.75rem;
     overflow: hidden;
+    margin: 1rem 0;
 }
 
 .progress {
+    background: var(--ucla-blue);
     height: 100%;
-    background-color: var(--ucla-blue);
     border-radius: 4px;
     transition: width 0.3s ease;
 }
 
-.progress-text {
+.dashboard-section-title {
+    color: var(--ucla-blue);
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    font-weight: 600;
+}
+
+.courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.no-courses {
+    text-align: center;
     color: var(--gray);
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
+    padding: 2rem;
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.03);
 }
 
 /* Responsive Design */
