@@ -19,17 +19,19 @@ try {
         throw new Exception('Invalid language ID');
     }
 
-    // Check if this is the French course (assuming French has languageId = 1)
-    $stmt = $pdo->prepare("SELECT languageName FROM languages WHERE languageId = ?");
-    $stmt->execute([$languageId]);
-    $language = $stmt->fetch();
+    $allowedLanguages = ['French', 'Spanish', 'German'];
 
-    if (!$language || $language['languageName'] !== 'French') {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Only French course is currently available for enrollment'
-        ]);
-        exit();
+    $stmt = $pdo->prepare("
+        SELECT languageName 
+        FROM languages 
+        WHERE languageId = ?
+    ");
+    $stmt->execute([$languageId]);
+    $language = $stmt->fetchColumn();
+
+    if (!in_array($language, $allowedLanguages)) {
+        echo json_encode(['success' => false, 'message' => 'This course is not available for enrollment']);
+        exit;
     }
 
     // Check if already enrolled

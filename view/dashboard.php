@@ -30,6 +30,7 @@ $stmt = $pdo->prepare("
         FROM user_enrollments 
         WHERE userId = ? AND status = 'active'
     )
+    AND languageName IN ('French', 'Spanish', 'German')
 ");
 $stmt->execute([$_SESSION['user_id']]);
 $availableCourses = $stmt->fetchAll();
@@ -105,8 +106,8 @@ $availableCourses = $stmt->fetchAll();
                             <p><?php echo htmlspecialchars($course['description']); ?></p>
                             <form action="../actions/enroll_course.php" method="POST" class="enrollment-form">
                                 <input type="hidden" name="languageId" value="<?php echo $course['languageId']; ?>">
-                                <button type="submit" class="btn btn-primary" <?php echo $course['languageName'] !== 'French' ? 'disabled' : ''; ?>>
-                                    <?php echo $course['languageName'] === 'French' ? 'Start Learning' : 'Coming Soon'; ?>
+                                <button type="submit" class="btn btn-primary">
+                                    Start Learning
                                 </button>
                             </form>
                         </div>
@@ -137,8 +138,8 @@ $availableCourses = $stmt->fetchAll();
                     const data = await response.json();
                     
                     if (data.success) {
-                        // Redirect to French course page
-                        window.location.href = data.redirect;
+                        // Refresh the page to show updated course lists
+                        window.location.reload();
                     } else {
                         alert(data.message || 'Failed to enroll in course');
                     }
