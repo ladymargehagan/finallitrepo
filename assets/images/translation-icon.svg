@@ -1,0 +1,15 @@
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Yellow circle background -->
+    <circle cx="20" cy="20" r="20" fill="#F7E987" />
+    
+    <!-- Blue rectangle with rounded corners -->
+    <rect x="8" y="10" width="24" height="20" rx="4" fill="#3C8DBC"/>
+    
+    <!-- Arrows -->
+    <path d="M14 15L18 19M18 15L14 19" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <path d="M26 15L22 19M22 15L26 19" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- Letters -->
+    <text x="12" y="25" font-family="Arial" font-size="12" fill="white">A</text>
+    <text x="22" y="25" font-family="Arial" font-size="12" fill="white">文</text>
+</svg>

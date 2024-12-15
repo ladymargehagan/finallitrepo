@@ -1,7 +1,6 @@
 <?php
 session_start();
 require_once '../config/db_connect.php';
-require_once '../actions/ProficiencyTracker.php';
 
 // Enable error reporting for debugging
 error_reporting(E_ALL);
@@ -43,16 +42,12 @@ $stmt = $pdo->prepare("
     JOIN languages l ON w.languageId = l.languageId
     WHERE w.languageId = ? 
     AND wc.categorySlug = ?
-    AND w.wordId NOT IN (
-        SELECT wordId FROM learned_words 
-        WHERE userId = ? AND proficiency = 'mastered'
-    )
     ORDER BY RAND()
     LIMIT 1
 ");
 
 try {
-    $stmt->execute([$languageId, $categorySlug, $_SESSION['user_id']]);
+    $stmt->execute([$languageId, $categorySlug]);
     $exercise = $stmt->fetch(PDO::FETCH_ASSOC);
     
     // Debug the result
@@ -94,7 +89,7 @@ try {
 }
 
 try {
-    $stmt->execute([$languageId, $categorySlug, $_SESSION['user_id']]);
+    $stmt->execute([$languageId, $categorySlug]);
     $exercise = $stmt->fetch(PDO::FETCH_ASSOC);
     
     // Initialize error message
@@ -110,24 +105,6 @@ try {
         if ($wordCount == 0) {
             $errorMessage = "No words available in this category yet. Please try another category.";
         } else {
-            $learnedCheck = $pdo->prepare("
-                SELECT COUNT(*) FROM words w 
-                WHERE w.languageId = ? 
-                AND w.categoryId = (SELECT categoryId FROM word_categories WHERE categorySlug = ?)
-                AND w.wordId NOT IN (
-                    SELECT wordId FROM learned_words 
-                    WHERE userId = ? AND proficiency = 'mastered'
-                )
-            ");
-            $learnedCheck->execute([$languageId, $categorySlug, $_SESSION['user_id']]);
-            $remainingWords = $learnedCheck->fetchColumn();
-            
-            if ($remainingWords == 0) {
-                $errorMessage = "Congratulations! You've mastered all words in this category.";
-            }
-        }
-        
-        if (!$errorMessage) {
             $errorMessage = "Unable to load exercise. Please try again later.";
         }
     }
@@ -158,15 +135,6 @@ if ($exercise) {
     $wordBank = $wordBankStmt->fetchAll(PDO::FETCH_ASSOC);
     error_log("DEBUG: Word bank results: " . json_encode($wordBank));
 }
-
-// Initialize proficiency tracker
-$proficiencyTracker = new ProficiencyTracker($pdo, $_SESSION['user_id']);
-$progress = $proficiencyTracker->getProgress();
-
-// Calculate progress percentage
-$progressPercent = $progress['total_words'] > 0 
-    ? ($progress['learned_words'] / $progress['total_words']) * 100 
-    : 0;
 
 // Add this near your other queries
 $stmt = $pdo->prepare("
@@ -318,38 +286,10 @@ $totalExercises = $stmt->fetchColumn();
                 <button onclick="window.location.href='dashboard.php'" class="btn btn-secondary">
                     Return to Dashboard
                 </button>
-                <?php if (strpos($errorMessage, "mastered") !== false): ?>
-                    <button onclick="window.location.href='progress.php'" class="btn btn-primary">
-                        View Progress
-                    </button>
-                <?php endif; ?>
             </div>
         </div>
     </div>
     <?php else: ?>
-        <div class="learning-progress-floating">
-            <div class="progress-inner">
-                <div class="progress-stats">
-                    <div class="progress-text">
-                        Learning Progress: <?php echo round($progress['progress']); ?>%
-                    </div>
-                    <div class="proficiency-counts">
-                        <span class="learning">Learning: <?php echo $progress['counts']['learning_count']; ?></span>
-                        <span class="familiar">Familiar: <?php echo $progress['counts']['familiar_count']; ?></span>
-                        <span class="mastered">Mastered: <?php echo $progress['counts']['mastered_count']; ?></span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: <?php echo $progress['progress']; ?>%"></div>
-                    </div>
-                </div>
-                <div class="hearts-display">
-                    <div class="hearts">
-                        <!-- Remove the PHP loop that creates hearts -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="tips-container">
             <div class="tips-icon">
                 <i class="fas fa-lightbulb"></i>
@@ -440,6 +380,9 @@ $totalExercises = $stmt->fetchColumn();
 
     <script src="../assets/js/learn-game.js"></script>
     <script>
+        // Add these variables at the top
+        let currentExerciseId = <?php echo json_encode($exercise['exerciseId'] ?? null); ?>;
+        
         // Handle modal close and navigation
         document.addEventListener('DOMContentLoaded', function() {
             const modal = document.getElementById('errorModal');

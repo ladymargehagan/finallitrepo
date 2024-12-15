@@ -269,3 +269,26 @@
         padding: 1.5rem 0;
     }
 }
+
+/* Update the translation icon styles */
+.translation-icon {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--ucla-blue);
+    border-radius: 6px;
+    margin-right: 8px;
+}
+
+.translation-icon::before {
+    content: '↔';  /* Using a bidirectional arrow instead of 'A→Z' */
+    color: var(--white);
+    font-size: 1rem;
+}
+
+/* Remove speaker icon styles */
+.pronunciation-icon {
+    display: none; /* This will hide the speaker icon */
+}

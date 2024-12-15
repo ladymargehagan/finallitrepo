@@ -101,6 +101,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+}
+
+.icon-container::before {
+    content: '';
+}
+
+.translation-icon {
+    width: 40px;
+    height: 40px;
+    background-image: url('../images/translation-icon.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .speech-bubble {
@@ -120,11 +134,7 @@
 }
 
 .audio-btn {
-    background: none;
-    border: none;
-    color: var(--ucla-blue);
-    cursor: pointer;
-    font-size: 1.2rem;
+    display: none;
 }
 
 .answer-area {
