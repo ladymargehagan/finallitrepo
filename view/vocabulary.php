@@ -55,49 +55,132 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/styles.css">
     <link rel="stylesheet" href="../assets/css/vocabulary.css">
+    <link rel="stylesheet" href="../assets/css/course.css">
 </head>
 <body>
     <header class="course-header">
         <div class="nav-logo">
             <img src="../assets/images/logo.png" alt="Logo" class="logo-image">
         </div>
-        <h1>Learn <?php echo htmlspecialchars($vocabulary[0]['categoryName']); ?> Vocabulary</h1>
-        <div class="auth-buttons">
-            <a href="course_page.php?languageId=<?php echo $languageId; ?>" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back
-            </a>
+        <div class="course-progress">
+            <div class="progress-bar">
+                <div class="progress" style="width: <?php echo ($progress['wordsLearned'] ?? 0) ?>%"></div>
+            </div>
+            <span class="progress-text"><?php echo $progress['wordsLearned'] ?? 0 ?> words learned</span>
         </div>
+        <a href="course_page.php?languageId=<?php echo $languageId; ?>" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i>
+            Back to Course
+        </a>
     </header>
 
     <div class="vocabulary-container">
-        <div class="flashcards-grid">
-            <?php foreach ($vocabulary as $word): ?>
-            <div class="flashcard">
-                <div class="flashcard-inner">
-                    <div class="flashcard-front">
-                        <div class="word"><?php echo htmlspecialchars($word['word']); ?></div>
-                        <div class="pronunciation"><?php echo htmlspecialchars($word['pronunciation']); ?></div>
-                    </div>
-                    <div class="flashcard-back">
-                        <div class="word"><?php echo htmlspecialchars($word['translated_text']); ?></div>
+        <div class="card-navigation">
+            <span class="progress-indicator">Card <span id="currentCard">1</span> of <?php echo count($vocabulary); ?></span>
+        </div>
+
+        <div class="single-card-container">
+            <?php foreach ($vocabulary as $index => $word): ?>
+                <div class="flashcard <?php echo $index === 0 ? 'active' : ''; ?>" 
+                     style="<?php echo $index === 0 ? '' : 'display: none;'; ?>"
+                     data-index="<?php echo $index; ?>">
+                    <div class="flashcard-inner">
+                        <div class="flashcard-front">
+                            <div class="word"><?php echo htmlspecialchars($word['word']); ?></div>
+                            <div class="pronunciation"><?php echo htmlspecialchars($word['pronunciation']); ?></div>
+                        </div>
+                        <div class="flashcard-back">
+                            <div class="word"><?php echo htmlspecialchars($word['translated_text']); ?></div>
+                        </div>
                     </div>
                 </div>
-            </div>
             <?php endforeach; ?>
         </div>
 
-        <div class="action-buttons">
-            <a href="learn.php?course=<?php echo $languageId; ?>&category=<?php echo $categorySlug; ?>" class="btn btn-primary btn-large">
+        <div class="navigation-controls">
+            <button class="btn btn-secondary" id="prevBtn" disabled>
+                <i class="fas fa-arrow-left"></i> Previous
+            </button>
+            <button class="btn btn-next" id="nextBtn">
+                Next <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <div class="tips-container">
+            <div class="tips-content">
+                <h4><i class="fas fa-lightbulb"></i> Quick Tips:</h4>
+                <ul>
+                    <li><i class="fas fa-mouse-pointer"></i> Click the card to see its translation</li>
+                    <li><i class="fas fa-arrows-alt"></i> Use navigation buttons to move between cards</li>
+                    <li><i class="fas fa-graduation-cap"></i> Practice each word before moving on</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="action-buttons" style="display: none;" id="startExercise">
+            <a href="learn.php?course=<?php echo $languageId; ?>&category=<?php echo $categorySlug; ?>" 
+               class="btn btn-primary btn-large">
                 Start Exercises <i class="fas fa-arrow-right"></i>
             </a>
         </div>
     </div>
 
     <script>
-        document.querySelectorAll('.flashcard').forEach(card => {
-            card.addEventListener('click', () => {
-                card.classList.toggle('flipped');
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.flashcard');
+            const currentCardSpan = document.getElementById('currentCard');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const startExercise = document.getElementById('startExercise');
+            let currentIndex = 0;
+
+            function updateCard(index) {
+                cards.forEach(card => {
+                    card.style.display = 'none';
+                    // Reset flip state when changing cards
+                    card.querySelector('.flashcard-inner').classList.remove('flipped');
+                });
+                cards[index].style.display = 'block';
+                currentCardSpan.textContent = index + 1;
+                
+                // Update button states
+                prevBtn.disabled = index === 0;
+                if (index === cards.length - 1) {
+                    nextBtn.textContent = 'Finish';
+                    nextBtn.classList.add('btn-next');
+                } else {
+                    nextBtn.textContent = 'Next';
+                    nextBtn.classList.remove('btn-next');
+                }
+            }
+
+            // Add click event for card flipping
+            cards.forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const inner = card.querySelector('.flashcard-inner');
+                    inner.classList.toggle('flipped');
+                });
             });
+
+            prevBtn.addEventListener('click', () => {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateCard(currentIndex);
+                }
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentIndex < cards.length - 1) {
+                    currentIndex++;
+                    updateCard(currentIndex);
+                } else {
+                    startExercise.style.display = 'block';
+                    nextBtn.style.display = 'none';
+                }
+            });
+
+            // Initialize first card
+            updateCard(0);
         });
     </script>
 </body>
