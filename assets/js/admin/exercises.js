@@ -249,73 +249,58 @@ class ExerciseCreator {
 
     async saveExercise() {
         try {
-            console.log('Starting save exercise...');
             const questionText = document.getElementById('questionText').value;
+            const languageId = document.getElementById('languageSelect').value;
+            const categoryId = document.getElementById('categorySelect').value;
+            const difficulty = document.getElementById('difficultySelect').value;
+            
+            // Get answer box and word tiles
             const answerBox = document.getElementById('answerBox');
             const wordTiles = document.querySelector('.word-tiles').children;
             
-            // Debug logging
-            console.log('Question Text:', questionText);
-            console.log('Answer Box:', answerBox);
-            console.log('Word Tiles:', wordTiles);
-
-            // Validate required fields
-            if (!questionText) {
-                alert('Please enter a question text');
-                return;
-            }
-
-            // Get answer tiles (correct answer)
+            // Get answer tiles (correct answer/translation)
             const answerTiles = Array.from(answerBox.children)
                 .filter(el => el.classList.contains('word-tile'));
             
-            console.log('Answer Tiles:', answerTiles);
-
             if (!answerTiles.length) {
                 alert('Please create an answer by dragging words to the answer box');
                 return;
             }
 
+            const translation = answerTiles[0].textContent.trim();
+
+            // Create word bank array
+            const wordBank = [
+                // The correct answer/translation
+                {
+                    text: translation,
+                    isAnswer: true
+                },
+                // The distractors
+                ...Array.from(wordTiles).map(tile => ({
+                    text: tile.textContent.trim(),
+                    isAnswer: false
+                }))
+            ];
+
             const exerciseData = {
-                languageId: document.getElementById('languageSelect').value,
-                categoryId: document.getElementById('categorySelect').value,
-                difficulty: document.getElementById('difficultySelect').value,
                 question: questionText,
-                wordBank: [
-                    // The correct answer
-                    {
-                        text: answerTiles[0].textContent.trim(),
-                        isAnswer: true
-                    },
-                    // The distractors
-                    ...Array.from(wordTiles).map(tile => ({
-                        text: tile.textContent.trim(),
-                        isAnswer: false
-                    }))
-                ]
+                translation: translation, // Add translation explicitly
+                languageId: parseInt(languageId),
+                categoryId: parseInt(categoryId),
+                difficulty,
+                wordBank
             };
 
-            // Debug logging
-            console.log('Exercise Data:', exerciseData);
+            console.log('Sending exercise data:', exerciseData);
 
-            // Validate required fields
-            if (!exerciseData.languageId || !exerciseData.categoryId || !exerciseData.difficulty) {
-                alert('Please select language, category, and difficulty');
-                return;
-            }
-
-            console.log('Sending request to save_exercise.php...');
             const response = await fetch('../../actions/admin/save_exercise.php', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(exerciseData),
-                credentials: 'include' // Include cookies if using sessions
+                body: JSON.stringify(exerciseData)
             });
-
-            console.log('Response received:', response);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -324,8 +309,6 @@ class ExerciseCreator {
             }
             
             const result = await response.json();
-            console.log('Parsed result:', result);
-
             if (result.success) {
                 alert('Exercise saved successfully!');
                 await this.loadExistingExercises();
