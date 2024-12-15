@@ -12,8 +12,8 @@ $stats = [
     'total_users' => $pdo->query("
         SELECT COUNT(DISTINCT u.id) 
         FROM users u 
-        JOIN exercise_sessions es ON u.id = es.userId 
-        WHERE es.startTime >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        JOIN user_enrollments ue ON u.id = ue.userId 
+        WHERE ue.status = 'active'
     ")->fetchColumn(),
     
     'total_exercises' => $pdo->query("
