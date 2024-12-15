@@ -35,7 +35,7 @@ $languages = $pdo->query("SELECT * FROM languages ORDER BY languageName")->fetch
 
             <div class="languages-grid">
                 <?php foreach ($languages as $language): ?>
-                    <div class="language-card <?= $language['active'] ? 'active' : 'inactive' ?>">
+                    <div class="language-card <?= $language['active'] ? 'active' : 'inactive' ?>" data-id="<?= $language['languageId'] ?>">
                         <div class="language-header">
                             <h3><?= htmlspecialchars($language['languageName']) ?></h3>
                             <span class="level-badge"><?= htmlspecialchars($language['level']) ?></span>
@@ -119,5 +119,68 @@ $languages = $pdo->query("SELECT * FROM languages ORDER BY languageName")->fetch
     </div>
 
     <script src="../../assets/js/admin/languages.js"></script>
+    <script>
+    let languageIdToDelete = null;
+    let languageNameToDelete = null;
+
+    function confirmDeleteLanguage(id, name) {
+        languageIdToDelete = id;
+        languageNameToDelete = name;
+        const modal = document.getElementById('deleteLanguageModal');
+        modal.style.display = 'block';
+    }
+
+    function hideDeleteModal() {
+        const modal = document.getElementById('deleteLanguageModal');
+        modal.style.display = 'none';
+        document.getElementById('confirmDelete').value = '';
+        languageIdToDelete = null;
+        languageNameToDelete = null;
+    }
+
+    function deleteLanguage() {
+        const confirmInput = document.getElementById('confirmDelete').value;
+        if (confirmInput !== 'DELETE') {
+            alert('Please type "DELETE" to confirm');
+            return;
+        }
+
+        fetch('../../actions/admin/delete_language.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                languageId: languageIdToDelete
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const languageCard = document.querySelector(`.language-card[data-id="${languageIdToDelete}"]`);
+                if (languageCard) {
+                    languageCard.remove();
+                }
+                hideDeleteModal();
+                alert('Language deleted successfully');
+                window.location.reload();
+            } else {
+                throw new Error(data.error || 'Failed to delete language');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to delete language: ' + error.message);
+        });
+    }
+
+    // Add event listeners for modal close buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        const closeButtons = document.querySelectorAll('.close');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', hideDeleteModal);
+        });
+    });
+    </script>
 </body>
 </html> 
