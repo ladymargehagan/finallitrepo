@@ -71,7 +71,7 @@ try {
     echo json_encode([
         'success' => true,
         'message' => 'Successfully enrolled in French course',
-        'redirect' => '../view/french_course.php?course=' . $languageId
+        'redirect' => '../view/course_page.php?course=' . $languageId
     ]);
 
 } catch (Exception $e) {

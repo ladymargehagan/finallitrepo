@@ -11,8 +11,8 @@ class ProficiencyTracker {
     public function recordAttempt($wordId, $isCorrect) {
         // Record attempt
         $stmt = $this->pdo->prepare("
-            INSERT INTO word_attempts (userId, wordId, isCorrect) 
-            VALUES (?, ?, ?)
+            INSERT INTO word_attempts (userId, wordId, isCorrect, attemptDate) 
+            VALUES (?, ?, ?, NOW())
         ");
         $stmt->execute([$this->userId, $wordId, $isCorrect]);
 
@@ -41,14 +41,14 @@ class ProficiencyTracker {
             SELECT 
                 lw.correct_attempts,
                 lw.total_attempts,
-                lw.lastReviewed,
                 (
                     SELECT COUNT(*) 
                     FROM word_attempts 
                     WHERE userId = ? AND wordId = ? 
                     AND isCorrect = 1 
-                    AND attemptDate >= DATE_SUB(NOW(), INTERVAL 5 DAY)
-                ) as recent_correct
+                    ORDER BY attemptDate DESC
+                    LIMIT 5
+                ) as recent_correct_count
             FROM learned_words lw
             WHERE userId = ? AND wordId = ?
         ");
@@ -68,54 +68,92 @@ class ProficiencyTracker {
     }
 
     private function calculateProficiencyLevel($stats) {
+        if (!$stats) return 'learning';
+
         $correctRate = $stats['total_attempts'] > 0 ? 
             $stats['correct_attempts'] / $stats['total_attempts'] : 0;
         
-        if ($stats['correct_attempts'] >= 5 && $correctRate >= 0.9 && $stats['recent_correct'] >= 3) {
+        // Mastered: Above 80% accuracy in recent attempts
+        if ($stats['total_attempts'] >= 5 && $correctRate >= 0.8) {
             return 'mastered';
-        } elseif ($stats['correct_attempts'] >= 3 && $correctRate >= 0.7) {
+        }
+        // Familiar: Above 50% accuracy in recent attempts
+        elseif ($stats['total_attempts'] >= 5 && $correctRate >= 0.5) {
             return 'familiar';
         }
+        // Learning: Default state or below 50% accuracy
         return 'learning';
     }
 
-    public function getProgress() {
-        // Get total words in current exercise set
+    public function markSectionViewed($categoryId) {
+        // Mark all words in a section as at least 'learning' when viewed
         $stmt = $this->pdo->prepare("
-            SELECT COUNT(DISTINCT w.wordId) as total_words
+            INSERT INTO learned_words (userId, wordId, proficiency, first_encounter)
+            SELECT ?, w.wordId, 'learning', NOW()
             FROM words w
-            JOIN exercise_sets es ON w.wordId = es.wordId
-            JOIN user_enrollments ue ON w.languageId = ue.languageId
-            WHERE ue.userId = ?
+            WHERE w.categoryId = ?
+            ON DUPLICATE KEY UPDATE
+            lastReviewed = NOW()
         ");
-        $stmt->execute([$this->userId]);
-        $totalWords = $stmt->fetch(PDO::FETCH_ASSOC)['total_words'];
+        $stmt->execute([$this->userId, $categoryId]);
+    }
 
-        // Get proficiency counts with weighted progress
+    public function getProgress($languageId = null, $categoryId = null) {
+        $params = [$this->userId];
+        $languageCondition = '';
+        $categoryCondition = '';
+        
+        if ($languageId) {
+            $languageCondition = ' AND w.languageId = ?';
+            $params[] = $languageId;
+        }
+        if ($categoryId) {
+            $categoryCondition = ' AND w.categoryId = ?';
+            $params[] = $categoryId;
+        }
+
         $stmt = $this->pdo->prepare("
             SELECT 
-                COUNT(CASE WHEN proficiency = 'learning' THEN 1 END) as learning_count,
-                COUNT(CASE WHEN proficiency = 'familiar' THEN 1 END) as familiar_count,
-                COUNT(CASE WHEN proficiency = 'mastered' THEN 1 END) as mastered_count
-            FROM learned_words
-            WHERE userId = ?
+                COUNT(CASE WHEN lw.proficiency = 'learning' THEN 1 END) as learning_count,
+                COUNT(CASE WHEN lw.proficiency = 'familiar' THEN 1 END) as familiar_count,
+                COUNT(CASE WHEN lw.proficiency = 'mastered' THEN 1 END) as mastered_count,
+                COUNT(*) as total_learned,
+                (
+                    SELECT COUNT(DISTINCT w2.wordId) 
+                    FROM words w2 
+                    WHERE 1=1 
+                    $languageCondition
+                    $categoryCondition
+                ) as total_words
+            FROM learned_words lw
+            JOIN words w ON lw.wordId = w.wordId
+            WHERE lw.userId = ?
+            $languageCondition
+            $categoryCondition
         ");
-        $stmt->execute([$this->userId]);
+
+        $stmt->execute($params);
         $counts = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Calculate weighted progress
+        return [
+            'progress' => $this->calculateWeightedProgress($counts),
+            'counts' => $counts
+        ];
+    }
+
+    private function calculateWeightedProgress($counts) {
         $learningWeight = 0.3;
         $familiarWeight = 0.7;
         $masteredWeight = 1.0;
 
-        $weightedProgress = 
-            ($counts['learning_count'] * $learningWeight + 
-             $counts['familiar_count'] * $familiarWeight + 
-             $counts['mastered_count'] * $masteredWeight) / ($totalWords ?: 1) * 100;
+        $weightedSum = 
+            ($counts['learning_count'] * $learningWeight +
+             $counts['familiar_count'] * $familiarWeight +
+             $counts['mastered_count'] * $masteredWeight);
 
-        return [
-            'progress' => min(100, round($weightedProgress, 2)),
-            'counts' => $counts
-        ];
+        $totalPossible = $counts['total_words'] * $masteredWeight;
+
+        return $totalPossible > 0 ? 
+            min(100, round(($weightedSum / $totalPossible) * 100, 2)) : 0;
     }
 }
