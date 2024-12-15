@@ -50,6 +50,9 @@ $languages = $pdo->query("SELECT * FROM languages ORDER BY languageName")->fetch
                                 <i class="fas fa-<?= $language['active'] ? 'times' : 'check' ?>"></i>
                                 <?= $language['active'] ? 'Deactivate' : 'Activate' ?>
                             </button>
+                            <button class="btn btn-danger" onclick="confirmDeleteLanguage(<?= $language['languageId'] ?>, '<?= htmlspecialchars($language['languageName']) ?>')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -85,6 +88,33 @@ $languages = $pdo->query("SELECT * FROM languages ORDER BY languageName")->fetch
                     <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Add Delete Confirmation Modal -->
+    <div id="deleteLanguageModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Delete Language</h2>
+            <div class="warning-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Warning: This will permanently delete:</p>
+                <ul>
+                    <li>All exercises in this language</li>
+                    <li>All word banks and translations</li>
+                    <li>All user progress in this language</li>
+                    <li>All enrollments in this language</li>
+                </ul>
+                <p>This action cannot be undone. Are you sure?</p>
+            </div>
+            <div class="confirmation-input">
+                <label>Type "DELETE" to confirm:</label>
+                <input type="text" id="confirmDelete" name="confirmDelete" required>
+            </div>
+            <div class="confirmation-actions">
+                <button type="button" class="btn btn-secondary" onclick="hideDeleteModal()">Cancel</button>
+                <button type="submit" class="btn btn-danger" onclick="deleteLanguage()">Delete</button>
+            </div>
         </div>
     </div>
 

@@ -22,7 +22,7 @@ try {
         }
     }
 
-    // 1. Insert into words table with translation
+    // 1. Insert into words table
     $stmt = $pdo->prepare("
         INSERT INTO words (
             word,
@@ -37,7 +37,7 @@ try {
     $stmt->execute([
         $data['question'],
         $data['question'],
-        $correctAnswer,  // This is the translation
+        $correctAnswer,
         $data['languageId'],
         $data['categoryId'],
         $data['difficulty']
@@ -45,7 +45,7 @@ try {
 
     $wordId = $pdo->lastInsertId();
 
-    // 2. Insert translation record
+    // 2. Insert translation record for the correct answer
     $stmt = $pdo->prepare("
         INSERT INTO translations (
             wordId,
@@ -61,27 +61,7 @@ try {
 
     $translationId = $pdo->lastInsertId();
 
-    // 3. Create exercise template
-    $stmt = $pdo->prepare("
-        INSERT INTO exercise_templates (
-            languageId,
-            categoryId,
-            question_text,
-            difficulty,
-            type
-        ) VALUES (?, ?, ?, ?, 'translation')
-    ");
-
-    $stmt->execute([
-        $data['languageId'],
-        $data['categoryId'],
-        $data['question'],
-        $data['difficulty']
-    ]);
-
-    $templateId = $pdo->lastInsertId();
-
-    // 4. Create exercise set
+    // 3. Create exercise set
     $stmt = $pdo->prepare("
         INSERT INTO exercise_sets (
             wordId,
@@ -99,24 +79,26 @@ try {
 
     $exerciseId = $pdo->lastInsertId();
 
-    // 5. Insert word bank options
+    // 4. Insert word bank options
     foreach ($data['wordBank'] as $index => $word) {
-        // Insert into word_bank
+        // First insert into word_bank table with segment_text
         $stmt = $pdo->prepare("
             INSERT INTO word_bank (
                 segment_text,
-                languageId
-            ) VALUES (?, ?)
+                languageId,
+                difficulty
+            ) VALUES (?, ?, ?)
         ");
         
         $stmt->execute([
-            $word['text'],
-            $data['languageId']
+            $word['text'],  // The English translation option
+            $data['languageId'],
+            $data['difficulty']
         ]);
         
         $bankWordId = $pdo->lastInsertId();
 
-        // Link to exercise template
+        // Then insert into exercise_word_bank
         $stmt = $pdo->prepare("
             INSERT INTO exercise_word_bank (
                 exerciseId,
@@ -127,7 +109,7 @@ try {
         ");
         
         $stmt->execute([
-            $templateId,  // Using templateId instead of exerciseId
+            $exerciseId,
             $bankWordId,
             $word['isAnswer'] ? 1 : 0,
             $index
