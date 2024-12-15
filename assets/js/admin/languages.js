@@ -60,6 +60,8 @@ form.addEventListener('submit', async (e) => {
         
         if (data.success) {
             hideModal();
+            // Show success message
+            alert(isEdit ? 'Language updated successfully!' : 'New language added successfully!');
             location.reload(); // Refresh to show changes
         } else {
             alert('Operation failed: ' + (data.error || 'Unknown error'));

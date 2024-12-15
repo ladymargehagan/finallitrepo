@@ -16,10 +16,6 @@
             <i class="fas fa-globe"></i>
             <span>Languages</span>
         </a>
-        <a href="users.php" <?php echo basename($_SERVER['PHP_SELF']) == 'users.php' ? 'class="active"' : ''; ?>>
-            <i class="fas fa-users"></i>
-            <span>Users</span>
-        </a>
         <a href="../../actions/admin/logout.php" class="logout">
             <i class="fas fa-sign-out-alt"></i>
             <span>Logout</span>

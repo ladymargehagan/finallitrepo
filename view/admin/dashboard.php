@@ -59,39 +59,10 @@ $recentActivity = $pdo->query("
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../assets/css/styles.css">
     <link rel="stylesheet" href="../../assets/css/admin/dashboard.css">
+    <?php include 'includes/sidebar.php'; ?>
 </head>
 <body>
     <div class="admin-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-language"></i>
-                <h2>Admin Panel</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="dashboard.php" class="active">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="exercises.php">
-                    <i class="fas fa-dumbbell"></i>
-                    <span>Exercises</span>
-                </a>
-                <a href="languages.php">
-                    <i class="fas fa-globe"></i>
-                    <span>Languages</span>
-                </a>
-                <a href="users.php">
-                    <i class="fas fa-users"></i>
-                    <span>Users</span>
-                </a>
-                <a href="../../actions/admin/logout.php" class="logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </nav>
-        </aside>
-
         <!-- Main Content -->
         <main class="main-content">
             <header class="content-header">

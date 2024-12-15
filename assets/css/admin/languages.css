@@ -107,4 +107,24 @@
     justify-content: flex-end;
     gap: 10px;
     margin-top: 20px;
+}
+
+/* Add this to your existing CSS */
+.content-header .btn-primary {
+    background-color: var(--mindaro);
+    color: var(--ucla-blue);
+    font-weight: 600;
+    padding: 12px 24px;
+    transition: all 0.3s ease;
+}
+
+.content-header .btn-primary:hover {
+    background-color: var(--ucla-blue);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 116, 165, 0.2);
+}
+
+.content-header .btn-primary i {
+    margin-right: 8px;
 } 
