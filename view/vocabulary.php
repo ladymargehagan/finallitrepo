@@ -107,12 +107,15 @@ try {
         </div>
 
         <div class="tips-container">
+            <div class="tips-icon">
+                <i class="fas fa-lightbulb"></i>
+            </div>
             <div class="tips-content">
-                <h4><i class="fas fa-lightbulb"></i> Quick Tips:</h4>
+                <h4>Quick Tips:</h4>
                 <ul>
-                    <li><i class="fas fa-mouse-pointer"></i> Click the card to see its translation</li>
-                    <li><i class="fas fa-arrows-alt"></i> Use navigation buttons to move between cards</li>
-                    <li><i class="fas fa-graduation-cap"></i> Practice each word before moving on</li>
+                    <li><span class="icon"><i class="fas fa-mouse-pointer"></i></span> Click the card to see its translation</li>
+                    <li><span class="icon"><i class="fas fa-arrows-alt"></i></span> Use navigation buttons to move between cards</li>
+                    <li><span class="icon"><i class="fas fa-graduation-cap"></i></span> Practice each word before moving on</li>
                 </ul>
             </div>
         </div>
@@ -135,12 +138,18 @@ try {
             let currentIndex = 0;
 
             function updateCard(index) {
-                cards.forEach(card => {
-                    card.style.display = 'none';
-                    // Reset flip state when changing cards
-                    card.querySelector('.flashcard-inner').classList.remove('flipped');
+                cards.forEach((card, idx) => {
+                    if (idx === index) {
+                        card.style.display = 'block';
+                        card.classList.add('active');
+                    } else {
+                        card.style.display = 'none';
+                        card.classList.remove('active');
+                        // Reset flip state for hidden cards
+                        card.querySelector('.flashcard-inner').classList.remove('flipped');
+                    }
                 });
-                cards[index].style.display = 'block';
+                
                 currentCardSpan.textContent = index + 1;
                 
                 // Update button states
@@ -156,9 +165,12 @@ try {
 
             // Add click event for card flipping
             cards.forEach(card => {
-                card.addEventListener('click', (e) => {
-                    const inner = card.querySelector('.flashcard-inner');
-                    inner.classList.toggle('flipped');
+                card.addEventListener('click', function() {
+                    // Only flip if card is active/visible
+                    if (this.classList.contains('active')) {
+                        const inner = this.querySelector('.flashcard-inner');
+                        inner.classList.toggle('flipped');
+                    }
                 });
             });
 
