@@ -75,15 +75,6 @@ $learningPercent = round(($stats['learning_count'] / $totalWords) * 100);
                         <span class="metric-label">Familiar</span>
                     </div>
                 </div>
-                <div class="metric learning">
-                    <div class="metric-icon">
-                        <i class="fas fa-book"></i>
-                    </div>
-                    <div class="metric-details">
-                        <span class="metric-value"><?php echo $stats['learning_count']; ?></span>
-                        <span class="metric-label">Learning</span>
-                    </div>
-                </div>
             </div>
         </div>
 

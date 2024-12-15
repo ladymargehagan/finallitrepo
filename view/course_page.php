@@ -27,25 +27,6 @@ try {
         exit();
     }
 
-    // Get learned words count and total words
-    $stmt = $pdo->prepare("
-        SELECT 
-            (SELECT COUNT(DISTINCT lw.wordId) 
-             FROM learned_words lw 
-             JOIN words w ON lw.wordId = w.wordId 
-             WHERE lw.userId = ? AND w.languageId = ?) as wordsLearned,
-            (SELECT COUNT(*) 
-             FROM words 
-             WHERE languageId = ?) as totalWords
-    ");
-    $stmt->execute([$_SESSION['user_id'], $languageId, $languageId]);
-    $progress = $stmt->fetch();
-
-    // Calculate percentage
-    $progressPercentage = ($progress['totalWords'] > 0) 
-        ? round(($progress['wordsLearned'] / $progress['totalWords']) * 100) 
-        : 0;
-
     // Replace the hardcoded categories array with database query
     try {
         // Fetch categories and word counts for this language
@@ -89,14 +70,6 @@ try {
     <header class="course-header">
         <div class="nav-logo">
             <img src="../assets/images/logo.svg" alt="Logo" class="logo-image">
-        </div>
-        <div class="course-progress">
-            <div class="progress-bar">
-                <div class="progress" style="width: <?php echo $progressPercentage; ?>%"></div>
-            </div>
-            <span class="progress-text">
-                <?php echo $progress['wordsLearned']; ?> / <?php echo $progress['totalWords']; ?> words learned
-            </span>
         </div>
         <a href="dashboard.php" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i>

@@ -10,7 +10,6 @@ if (!isset($_SESSION['user_id'])) {
 
 try {
     require_once '../config/db_connect.php';
-    require_once '../actions/ProficiencyTracker.php';
 
     $input = json_decode(file_get_contents('php://input'), true);
     
@@ -41,26 +40,9 @@ try {
     // Compare with user answer
     $isCorrect = (trim($input['answer']) === trim($correctAnswer));
 
-    // Get wordId for the exercise
-    $stmt = $pdo->prepare("SELECT wordId FROM exercise_sets WHERE exerciseId = ?");
-    $stmt->execute([$input['exerciseId']]);
-    $wordId = $stmt->fetchColumn();
-
-    // Record attempt with explicit boolean value
-    $stmt = $pdo->prepare("
-        INSERT INTO word_attempts (userId, wordId, isCorrect) 
-        VALUES (?, ?, ?)
-    ");
-    $stmt->execute([$_SESSION['user_id'], $wordId, $isCorrect ? 1 : 0]);
-
-    // Initialize proficiency tracker and get progress
-    $proficiencyTracker = new ProficiencyTracker($pdo, $_SESSION['user_id']);
-    $progress = $proficiencyTracker->getProgress();
-
     echo json_encode([
         'success' => true,
-        'correct' => $isCorrect,
-        'progress' => $progress
+        'correct' => $isCorrect
     ]);
 
 } catch (Exception $e) {

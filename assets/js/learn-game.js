@@ -10,6 +10,7 @@ class LearnGame {
         this.setupEventListeners();
         this.initializeExercise();
         this.updateHearts();
+        this.exerciseStartTime = Date.now() / 1000;
     }
 
     initializeElements() {
@@ -197,7 +198,8 @@ class LearnGame {
                 },
                 body: JSON.stringify({
                     exerciseId: this.currentExercise.id,
-                    answer: userAnswer
+                    answer: userAnswer,
+                    startTime: this.exerciseStartTime || Date.now() / 1000
                 })
             });
 
@@ -206,9 +208,6 @@ class LearnGame {
             
             if (data.success) {
                 if (data.correct) {
-                    if (data.progress) {
-                        this.updateProgress(data.progress);
-                    }
                     this.showResultModal(true);
                 } else {
                     this.handleWrongAnswer();
@@ -324,43 +323,6 @@ class LearnGame {
         window.location.reload(); // Reload for new exercise while keeping progress
     }
 
-    showProficiencyLevel(level) {
-        const levelColors = {
-            learning: '#FFA726',  // Orange
-            familiar: '#66BB6A',  // Green
-            mastered: '#42A5F5'   // Blue
-        };
-
-        const notification = document.createElement('div');
-        notification.className = 'proficiency-notification';
-        notification.innerHTML = `
-            <div class="level-icon">
-                <i class='bx ${this.getProficiencyIcon(level)}'></i>
-            </div>
-            <div class="level-text">
-                Word Proficiency: ${level.charAt(0).toUpperCase() + level.slice(1)}
-            </div>
-        `;
-
-        document.body.appendChild(notification);
-        
-        // Trigger animation
-        setTimeout(() => notification.classList.add('show'), 100);
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => notification.remove(), 300);
-        }, 2000);
-    }
-
-    getProficiencyIcon(level) {
-        switch(level) {
-            case 'learning': return 'bx-book-reader';
-            case 'familiar': return 'bx-book-bookmark';
-            case 'mastered': return 'bx-crown';
-            default: return 'bx-book';
-        }
-    }
-
     initializeTips() {
         const tipsToggle = document.querySelector('.tips-toggle, .bulb-icon');
         const tipsContent = document.querySelector('.quick-tips, .tips-content');
@@ -401,6 +363,11 @@ class LearnGame {
                 this.elements.hearts.appendChild(heart);
             }
         }
+    }
+
+    loadExercise() {
+        this.initializeExercise();
+        this.exerciseStartTime = Date.now() / 1000;
     }
 }
 

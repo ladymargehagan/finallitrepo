@@ -16,10 +16,7 @@ $user = $stmt->fetch();
 
 // Fetch user's current courses with word count
 $stmt = $pdo->prepare("
-    SELECT l.*, ue.status, ue.enrollmentDate,
-    (SELECT COUNT(*) FROM learned_words lw 
-     JOIN words w ON lw.wordId = w.wordId 
-     WHERE lw.userId = ue.userId AND w.languageId = l.languageId) as wordsLearned
+    SELECT l.*, ue.status, ue.enrollmentDate
     FROM user_enrollments ue 
     JOIN languages l ON ue.languageId = l.languageId 
     WHERE ue.userId = ? AND ue.status = 'active'
