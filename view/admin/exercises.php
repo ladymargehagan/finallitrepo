@@ -41,10 +41,8 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
 
             <!-- Exercise Creator Section -->
             <div class="exercise-creator">
-                <div class="toolbar">
-                    <button id="newExercise" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> New Exercise
-                    </button>
+                <div class="section-header">
+                    <h2><i class="fas fa-plus-circle"></i> Add New Exercise</h2>
                 </div>
 
                 <div class="exercise-form">
