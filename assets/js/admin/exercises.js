@@ -4,11 +4,20 @@ class ExerciseCreator {
         this.loadExistingExercises();
         this.setupWordBank();
         this.setupEventListeners();
+        
+        // Add category initialization
+        this.setupNewCategoryModal();
+        const newCategoryBtn = document.getElementById('newCategoryBtn');
+        if (newCategoryBtn) {
+            newCategoryBtn.addEventListener('click', () => {
+                const modal = document.getElementById('newCategoryModal');
+                if (modal) modal.style.display = 'block';
+            });
+        }
     }
 
     init() {
         this.setupExistingExercisesFilter();
-        this.setupNewCategoryModal();
     }
 
     setupWordBank() {
@@ -77,75 +86,128 @@ class ExerciseCreator {
     }
 
     setupNewCategoryModal() {
-        const showModalBtn = document.querySelector('[onclick="showModal(\'newCategoryModal\')"]');
-        if (showModalBtn) {
-            showModalBtn.addEventListener('click', () => this.showNewCategoryModal());
+        // First remove any existing modal
+        const existingModal = document.getElementById('newCategoryModal');
+        if (existingModal) {
+            existingModal.remove();
         }
+
+        // Create new modal
+        const modal = document.createElement('div');
+        modal.id = 'newCategoryModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Add New Category</h3>
+                <form id="newCategoryForm" class="category-form">
+                    <div class="form-group">
+                        <label for="categoryName">Category Name</label>
+                        <input type="text" 
+                               id="categoryName" 
+                               name="categoryName"
+                               class="form-control" 
+                               placeholder="Enter category name" 
+                               required>
+                    </div>
+                    <div class="form-group">
+                        <label for="categoryDescription">Description</label>
+                        <textarea id="categoryDescription" 
+                                name="categoryDescription"
+                                class="form-control" 
+                                rows="3" 
+                                placeholder="Enter category description"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelCategory">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Category</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Set up event listeners after the modal is added to the DOM
+        const form = document.getElementById('newCategoryForm');
+        const closeBtn = modal.querySelector('.close');
+        const cancelBtn = document.getElementById('cancelCategory');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = {
+                categoryName: document.getElementById('categoryName').value.trim(),
+                categoryDescription: document.getElementById('categoryDescription').value.trim()
+            };
+            this.handleNewCategory(formData);
+        });
+
+        closeBtn.addEventListener('click', () => this.closeModal());
+        cancelBtn.addEventListener('click', () => this.closeModal());
+
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closeModal();
+            }
+        });
     }
 
-    showNewCategoryModal() {
-        // Create modal if it doesn't exist
-        let modal = document.getElementById('newCategoryModal');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'newCategoryModal';
-            modal.className = 'modal';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <h3>Add New Category</h3>
-                    <form id="newCategoryForm">
-                        <div class="form-group">
-                            <input type="text" id="categoryName" placeholder="Category Name" required>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="exerciseCreator.closeModal()">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save Category</button>
-                        </div>
-                    </form>
-                </div>
-            `;
-            document.body.appendChild(modal);
-
-            // Setup form submission
-            const form = modal.querySelector('#newCategoryForm');
-            form.addEventListener('submit', (e) => this.handleNewCategory(e));
+    handleNewCategory(formData) {
+        if (!formData.categoryName) {
+            alert('Please enter a category name');
+            return;
         }
-        modal.style.display = 'block';
+
+        fetch('../../actions/admin/add_category.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Add new option to category select
+                const select = document.getElementById('categorySelect');
+                const option = document.createElement('option');
+                option.value = data.categoryId;
+                option.textContent = data.categoryName;
+                select.appendChild(option);
+                
+                // Show success message
+                const successMessage = document.createElement('div');
+                successMessage.className = 'alert alert-success';
+                successMessage.innerHTML = `
+                    <i class="fas fa-check-circle"></i>
+                    <span>Category "${data.categoryName}" added successfully!</span>
+                `;
+                document.querySelector('.quick-actions-panel').appendChild(successMessage);
+
+                // Remove success message after 3 seconds
+                setTimeout(() => {
+                    successMessage.remove();
+                }, 3000);
+
+                // Close and reset modal
+                this.closeModal();
+            } else {
+                throw new Error(data.error || 'Failed to add category');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error adding category: ' + error.message);
+        });
     }
 
     closeModal() {
         const modal = document.getElementById('newCategoryModal');
-        if (modal) modal.style.display = 'none';
-    }
-
-    async handleNewCategory(e) {
-        e.preventDefault();
-        const categoryName = document.getElementById('categoryName').value;
-        
-        try {
-            const response = await fetch('../../actions/admin/add_category.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ categoryName })
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                // Refresh category select options
-                const select = document.getElementById('categorySelect');
-                const option = document.createElement('option');
-                option.value = data.categoryId;
-                option.textContent = categoryName;
-                select.appendChild(option);
-                this.closeModal();
-            } else {
-                alert(data.error || 'Failed to add category');
+        if (modal) {
+            modal.style.display = 'none';
+            const form = document.getElementById('newCategoryForm');
+            if (form) {
+                form.reset();
             }
-        } catch (error) {
-            console.error('Error adding category:', error);
-            alert('Failed to add category');
         }
     }
 
@@ -471,7 +533,5 @@ class ExerciseCreator {
     }
 }
 
-// Initialize the ExerciseCreator when the DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.exerciseCreator = new ExerciseCreator();
-});
+// Initialize the class
+const exerciseCreator = new ExerciseCreator();

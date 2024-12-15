@@ -12,8 +12,12 @@ try {
     }
 
     $categoryName = trim($data['categoryName']);
-    $categoryDescription = isset($data['categoryDescription']) ? trim($data['categoryDescription']) : null;
+    $categoryDescription = isset($data['categoryDescription']) ? trim($data['categoryDescription']) : '';
     
+    // Log the incoming data for debugging
+    error_log("Category Name: " . $categoryName);
+    error_log("Category Description: " . $categoryDescription);
+
     // Create a URL-friendly slug
     $categorySlug = strtolower(preg_replace('/[^A-Za-z0-9-]+/', '-', $categoryName));
 
@@ -24,7 +28,7 @@ try {
         throw new Exception('Category already exists');
     }
 
-    // Insert new category
+    // Insert new category with description
     $stmt = $pdo->prepare("
         INSERT INTO word_categories (categoryName, categorySlug, description) 
         VALUES (?, ?, ?)
@@ -33,14 +37,21 @@ try {
     $stmt->execute([$categoryName, $categorySlug, $categoryDescription]);
     $categoryId = $pdo->lastInsertId();
 
+    // Verify the insertion
+    $stmt = $pdo->prepare("SELECT * FROM word_categories WHERE categoryId = ?");
+    $stmt->execute([$categoryId]);
+    $newCategory = $stmt->fetch(PDO::FETCH_ASSOC);
+
     echo json_encode([
         'success' => true,
         'categoryId' => $categoryId,
         'categoryName' => $categoryName,
+        'description' => $categoryDescription,
         'message' => 'Category added successfully!'
     ]);
 
 } catch (Exception $e) {
+    error_log("Error adding category: " . $e->getMessage());
     http_response_code(500);
     echo json_encode([
         'success' => false,

@@ -31,7 +31,7 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
         <div class="quick-actions-panel">
             <h2>Quick Actions</h2>
             <div class="action-buttons">
-                <button class="btn btn-secondary" onclick="showModal('newCategoryModal')">
+                <button class="btn btn-secondary" id="newCategoryBtn">
                     <i class="fas fa-folder-plus"></i> New Category
                 </button>
             </div>
