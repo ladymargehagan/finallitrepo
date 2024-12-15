@@ -12,6 +12,34 @@ if (!isset($_SESSION['user_id'])) {
 $languageId = isset($_GET['course']) ? (int)$_GET['course'] : 0;
 $categorySlug = isset($_GET['category']) ? htmlspecialchars($_GET['category']) : '';
 
+// Get current category progress
+$stmt = $pdo->prepare("
+    SELECT 
+        COUNT(CASE WHEN lw.proficiency = 'mastered' THEN 1 END) as mastered,
+        COUNT(DISTINCT w.wordId) as total
+    FROM words w
+    LEFT JOIN learned_words lw ON w.wordId = lw.wordId AND lw.userId = ?
+    WHERE w.categoryId = ?
+");
+$stmt->execute([$_SESSION['user_id'], $categoryId]);
+$progress = $stmt->fetch();
+
+// Initialize progress values if null
+$progress['mastered'] = $progress['mastered'] ?? 0;
+$progress['total'] = $progress['total'] ?? 1; // Prevent division by zero
+
+// Mark word as being learned when displayed
+foreach ($vocabulary as $word) {
+    $stmt = $pdo->prepare("
+        INSERT INTO learned_words 
+            (userId, wordId, proficiency, first_encounter, last_viewed) 
+        VALUES 
+            (?, ?, 'learning', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON DUPLICATE KEY UPDATE last_viewed = CURRENT_TIMESTAMP
+    ");
+    $stmt->execute([$_SESSION['user_id'], $word['wordId']]);
+}
+
 // Fetch vocabulary words for this category
 try {
     $stmt = $pdo->prepare("
@@ -60,13 +88,13 @@ try {
 <body>
     <header class="course-header">
         <div class="nav-logo">
-            <img src="../assets/images/logo.png" alt="Logo" class="logo-image">
+            <img src="../assets/images/logo.svg" alt="Logo" class="logo-image">
         </div>
         <div class="course-progress">
             <div class="progress-bar">
-                <div class="progress" style="width: <?php echo ($progress['wordsLearned'] ?? 0) ?>%"></div>
+                <div class="progress" style="width: <?php echo ($progress['total'] > 0 ? ($progress['mastered'] / $progress['total'] * 100) : 0) ?>%"></div>
             </div>
-            <span class="progress-text"><?php echo $progress['wordsLearned'] ?? 0 ?> words learned</span>
+            <span class="progress-text"><?php echo $progress['mastered'] ?> words mastered</span>
         </div>
         <a href="course_page.php?languageId=<?php echo $languageId; ?>" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i>

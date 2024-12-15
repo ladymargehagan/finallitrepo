@@ -59,36 +59,13 @@ $currentCourses = $stmt->fetchAll();
         
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-value"><?php echo count($currentCourses); ?></div>
-                <div class="stat-label">Active Courses</div>
+                <div class="stat-value"><?php echo $totalWords; ?></div>
+                <div class="stat-label">Total Words Learned</div>
             </div>
             <div class="stat-card">
-                <?php
-                $totalWords = 0;
-                foreach ($currentCourses as $course) {
-                    $totalWords += $course['wordsLearned'];
-                }
-                ?>
-                <div class="stat-value"><?php echo $totalWords; ?></div>
-                <div class="stat-label">Words Learned</div>
+                <div class="stat-value"><?php echo count($currentCourses); ?></div>
+                <div class="stat-label">Languages Learning</div>
             </div>
-        </div>
-
-        <div class="course-grid">
-            <?php foreach ($currentCourses as $course): ?>
-                <div class="course-card">
-                    <h3><?php echo htmlspecialchars($course['languageName']); ?></h3>
-                    <div class="progress-bar">
-                        <?php 
-                        $progressPercent = min(100, ($course['wordsLearned'] / 20) * 100);
-                        ?>
-                        <div class="progress" style="width: <?php echo $progressPercent; ?>%"></div>
-                    </div>
-                    <p><?php echo round($progressPercent); ?>% Complete</p>
-                    <a href="vocabulary.php?id=<?php echo $course['languageId']; ?>&language=<?php echo urlencode($course['languageName']); ?>" 
-                       class="btn-update">Continue Learning</a>
-                </div>
-            <?php endforeach; ?>
         </div>
 
         <div class="password-section">

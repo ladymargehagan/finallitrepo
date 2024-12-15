@@ -65,20 +65,11 @@
         <div class="footer-content">
             <div class="contact-info">
                 <h4>Contact</h4>
-                <p><i class="fas fa-envelope"></i> contact@example.com</p>
-                <p><i class="fas fa-phone"></i> (555) 123-4567</p>
-            </div>
-            <div class="quick-links">
-                <h4>Links</h4>
-                <ul>
-                    <li><a href="#"><i class="fas fa-info-circle"></i> About Us</a></li>
-                    <li><a href="#"><i class="fas fa-shield-alt"></i> Privacy Policy</a></li>
-                    <li><a href="#"><i class="fas fa-file-contract"></i> Terms of Service</a></li>
-                </ul>
+                <p><i class="fas fa-envelope"></i> lady.hagan@ashesi.edu.gh</p>
             </div>
         </div>
         <div class="footer-copyright">
-            <p>&copy; 2024 Language Learning Platform. All rights reserved.</p>
+            <p>&copy; 2024 Lost in Translation. All rights reserved.</p>
         </div>
     </footer>
 </body>

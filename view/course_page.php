@@ -80,7 +80,7 @@ try {
     <!-- Header -->
     <header class="course-header">
         <div class="nav-logo">
-            <img src="../assets/images/logo.png" alt="Logo" class="logo-image">
+            <img src="../assets/images/logo.svg" alt="Logo" class="logo-image">
         </div>
         <div class="course-progress">
             <div class="progress-bar">
@@ -102,9 +102,6 @@ try {
                 <?php foreach ($categories as $category): ?>
                     <div class="category-card" onclick="window.location.href='vocabulary.php?course=<?= $languageId ?>&category=<?= $category['categorySlug'] ?>'">
                         <div class="category-icon">
-                            <?php if ($category['categorySlug'] === 'greetings'): ?>
-                                <span class="number-badge">1</span>
-                            <?php endif; ?>
                             <i class="<?= htmlspecialchars($category['icon']) ?>"></i>
                         </div>
                         <div class="category-info">
