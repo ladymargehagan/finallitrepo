@@ -366,14 +366,95 @@ class ExerciseCreator {
                 <span class="language">${exercise.languageName}</span>
             </div>
             <div class="exercise-actions">
-                <button onclick="exerciseCreator.editExercise(${exercise.exerciseId})" class="btn btn-secondary">
+                <button class="btn btn-secondary edit-btn" data-id="${exercise.exerciseId}">
                     <i class="fas fa-edit"></i> Edit
                 </button>
-                <button onclick="exerciseCreator.deleteExercise(${exercise.exerciseId})" class="btn btn-danger">
+                <button class="btn btn-danger delete-btn" data-id="${exercise.exerciseId}">
                     <i class="fas fa-trash"></i> Delete
                 </button>
             </div>
         `;
+
+        // Add event listeners to the buttons
+        const editBtn = card.querySelector('.edit-btn');
+        const deleteBtn = card.querySelector('.delete-btn');
+
+        editBtn.addEventListener('click', () => {
+            // Get the exercise data and populate the form
+            fetch(`../../actions/admin/get_single_exercise.php?id=${exercise.exerciseId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Populate the main form instead of a modal
+                    document.getElementById('questionText').value = data.question_text;
+                    document.getElementById('languageSelect').value = data.languageId;
+                    document.getElementById('categorySelect').value = data.categoryId;
+                    document.getElementById('difficultySelect').value = data.difficulty;
+
+                    // Clear and populate word bank
+                    const wordTiles = document.querySelector('.word-tiles');
+                    wordTiles.innerHTML = '';
+                    const answerBox = document.getElementById('answerBox');
+                    answerBox.innerHTML = '';
+
+                    // Add word bank tiles
+                    data.wordBank.forEach(word => {
+                        const tile = document.createElement('div');
+                        tile.className = 'word-tile';
+                        tile.draggable = true;
+                        tile.textContent = word.segment_text;
+
+                        if (word.is_answer) {
+                            // Place answer in answer box
+                            const answerTile = tile.cloneNode(true);
+                            answerBox.appendChild(answerTile);
+                        } else {
+                            // Place other words in word bank
+                            wordTiles.appendChild(tile);
+                        }
+                    });
+
+                    // Update save button to indicate editing mode
+                    const saveBtn = document.getElementById('saveExercise');
+                    saveBtn.innerHTML = '<i class="fas fa-save"></i> Update Exercise';
+                    saveBtn.dataset.editId = exercise.exerciseId;
+
+                    // Scroll to the form
+                    document.querySelector('.exercise-form').scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error loading exercise data');
+                });
+        });
+
+        deleteBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to delete this exercise?')) {
+                fetch('../../actions/admin/delete_exercise.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ exerciseId: exercise.exerciseId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        card.remove(); // Remove the card from the UI
+                        alert('Exercise deleted successfully');
+                    } else {
+                        throw new Error(data.error || 'Failed to delete exercise');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting exercise');
+                });
+            }
+        });
+
         return card;
     }
 

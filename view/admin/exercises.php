@@ -40,14 +40,8 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
         <!-- Exercise Creator Section -->
         <div class="exercise-creator">
             <div class="toolbar">
-                <button id="prevExercise" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Previous
-                </button>
                 <button id="newExercise" class="btn btn-primary">
                     <i class="fas fa-plus"></i> New Exercise
-                </button>
-                <button id="nextExercise" class="btn btn-secondary">
-                    Next <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
 
@@ -123,6 +117,28 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
             </div>
         </div>
     </main>
+
+    <!-- Edit Exercise Modal -->
+    <div id="editExerciseModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit Exercise</h2>
+            <!-- The form will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Confirm Delete</h2>
+            <p>Are you sure you want to delete this exercise?</p>
+            <div class="modal-actions">
+                <button id="confirmDelete" class="btn btn-danger">Delete</button>
+                <button class="btn btn-secondary close-modal">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Include JavaScript -->
     <script src="../../assets/js/admin/exercises.js"></script>
