@@ -1,78 +1,84 @@
-document.getElementById('newLanguageForm').addEventListener('submit', async (e) => {
+// Modal handling
+const modal = document.getElementById('languageModal');
+const form = document.getElementById('languageForm');
+
+function showAddLanguageModal() {
+    document.getElementById('modalTitle').textContent = 'Add New Language';
+    form.reset();
+    form.removeAttribute('data-edit');
+    modal.style.display = 'block';
+}
+
+function hideModal() {
+    modal.style.display = 'none';
+}
+
+function editLanguage(language) {
+    document.getElementById('modalTitle').textContent = 'Edit Language';
+    document.getElementById('languageId').value = language.languageId;
+    document.getElementById('languageName').value = language.languageName;
+    document.getElementById('level').value = language.level;
+    document.getElementById('description').value = language.description;
+    form.setAttribute('data-edit', 'true');
+    modal.style.display = 'block';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    if (event.target == modal) {
+        hideModal();
+    }
+}
+
+// Form submission
+form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    
+    const isEdit = form.hasAttribute('data-edit');
+    const formData = new FormData(form);
+    formData.append('action', isEdit ? 'edit' : 'add');
+
     try {
-        const response = await fetch('../../actions/admin/add_language.php', {
+        const response = await fetch('../../actions/admin/manage_languages.php', {
             method: 'POST',
             body: formData
         });
-        
         const data = await response.json();
         
         if (data.success) {
-            // Refresh languages dropdown
             location.reload();
         } else {
-            alert(data.error || 'Failed to add language');
+            alert('Operation failed: ' + (data.error || 'Unknown error'));
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('An error occurred. Please try again.');
+        alert('Operation failed: ' + error.message);
     }
 });
 
-// Modal control functions
-function showModal(modalId) {
-    document.getElementById(modalId).classList.add('active');
-}
-
-function hideModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
-}
-
-function editLanguage(languageId) {
-    // Implement edit functionality
-}
-
-function toggleLanguageStatus(languageId) {
-    if (confirm('Are you sure you want to change this language\'s status?')) {
-        fetch('../../actions/admin/toggle_language_status.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ languageId: languageId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.reload();
-            } else {
-                alert('Error updating language status');
-            }
-        });
+// Toggle language status
+async function toggleLanguage(languageId, currentStatus) {
+    if (!confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this language?`)) {
+        return;
     }
-}
 
-// Form submission handling
-document.getElementById('addLanguageForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    
-    fetch(this.action, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
+    const formData = new FormData();
+    formData.append('action', 'toggle');
+    formData.append('languageId', languageId);
+    formData.append('active', currentStatus ? 0 : 1);
+
+    try {
+        const response = await fetch('../../actions/admin/manage_languages.php', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        
         if (data.success) {
-            hideModal('newLanguageModal');
-            window.location.reload();
+            location.reload();
         } else {
-            alert(data.message || 'Error adding language');
+            alert('Failed to update language status');
         }
-    });
+    } catch (error) {
+        alert('Operation failed: ' + error.message);
+    }
+} 
 }); 

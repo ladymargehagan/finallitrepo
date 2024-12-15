@@ -2,39 +2,109 @@
 .languages-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-    padding: 2rem;
+    gap: 20px;
+    padding: 20px;
 }
 
 .language-card {
     background: var(--white);
-    border-radius: 8px;
-    padding: 1.5rem;
+    border-radius: 10px;
+    padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.language-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.language-card.inactive {
+    opacity: 0.7;
+    background: var(--gray-light);
 }
 
 .language-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 15px;
 }
 
-.language-code {
-    background: var(--mindaro);
+.language-header h3 {
     color: var(--ucla-blue);
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.875rem;
+    margin: 0;
 }
 
-.status-badge {
-    display: inline-flex;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.875rem;
-}
-
-.status-badge.active {
+.level-badge {
     background: var(--mindaro);
-    color: var(--ucla-blue);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    color: var(--black);
+}
+
+.description {
+    color: var(--gray);
+    margin-bottom: 20px;
+    min-height: 60px;
+}
+
+.language-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--white);
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--gray);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.form-group textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
 } 

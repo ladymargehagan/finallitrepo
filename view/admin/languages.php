@@ -7,7 +7,6 @@ if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
     exit();
 }
 
-// Fetch existing languages
 $languages = $pdo->query("SELECT * FROM languages ORDER BY languageName")->fetchAll();
 ?>
 
@@ -19,63 +18,36 @@ $languages = $pdo->query("SELECT * FROM languages ORDER BY languageName")->fetch
     <title>Language Management - Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../../assets/css/styles.css">
+    <link rel="stylesheet" href="../../assets/css/admin/dashboard.css">
     <link rel="stylesheet" href="../../assets/css/admin/languages.css">
 </head>
 <body>
     <div class="admin-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-language"></i>
-                <h2>Admin Panel</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="dashboard.php">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="exercises.php">
-                    <i class="fas fa-dumbbell"></i>
-                    <span>Exercises</span>
-                </a>
-                <a href="languages.php" class="active">
-                    <i class="fas fa-globe"></i>
-                    <span>Languages</span>
-                </a>
-                <a href="users.php">
-                    <i class="fas fa-users"></i>
-                    <span>Users</span>
-                </a>
-            </nav>
-        </aside>
-
-        <!-- Main Content -->
+        <?php include 'includes/sidebar.php'; ?>
+        
         <main class="main-content">
             <div class="content-header">
                 <h1>Language Management</h1>
-                <button class="btn btn-primary" onclick="showModal('newLanguageModal')">
+                <button class="btn btn-primary" onclick="showAddLanguageModal()">
                     <i class="fas fa-plus"></i> Add New Language
                 </button>
             </div>
 
             <div class="languages-grid">
                 <?php foreach ($languages as $language): ?>
-                    <div class="language-card">
+                    <div class="language-card <?= $language['active'] ? 'active' : 'inactive' ?>">
                         <div class="language-header">
                             <h3><?= htmlspecialchars($language['languageName']) ?></h3>
-                            <span class="language-code"><?= htmlspecialchars($language['languageCode']) ?></span>
+                            <span class="level-badge"><?= htmlspecialchars($language['level']) ?></span>
                         </div>
-                        <div class="language-status">
-                            <span class="status-badge <?= $language['active'] ? 'active' : 'inactive' ?>">
-                                <?= $language['active'] ? 'Active' : 'Inactive' ?>
-                            </span>
-                        </div>
+                        <p class="description"><?= htmlspecialchars($language['description']) ?></p>
                         <div class="language-actions">
-                            <button class="btn btn-secondary" onclick="editLanguage(<?= $language['languageId'] ?>)">
+                            <button class="btn btn-secondary" onclick="editLanguage(<?= htmlspecialchars(json_encode($language)) ?>)">
                                 <i class="fas fa-edit"></i> Edit
                             </button>
-                            <button class="btn btn-danger" onclick="toggleLanguageStatus(<?= $language['languageId'] ?>)">
-                                <i class="fas fa-power-off"></i> 
+                            <button class="btn <?= $language['active'] ? 'btn-danger' : 'btn-success' ?>"
+                                    onclick="toggleLanguage(<?= $language['languageId'] ?>, <?= $language['active'] ?>)">
+                                <i class="fas fa-<?= $language['active'] ? 'times' : 'check' ?>"></i>
                                 <?= $language['active'] ? 'Deactivate' : 'Activate' ?>
                             </button>
                         </div>
@@ -85,28 +57,32 @@ $languages = $pdo->query("SELECT * FROM languages ORDER BY languageName")->fetch
         </main>
     </div>
 
-    <!-- Add Language Modal -->
-    <div id="newLanguageModal" class="modal">
+    <!-- Add/Edit Language Modal -->
+    <div id="languageModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add New Language</h3>
-                <button class="close-modal" onclick="hideModal('newLanguageModal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="addLanguageForm" action="../../actions/admin/add_language.php" method="POST">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle">Add New Language</h2>
+            <form id="languageForm">
+                <input type="hidden" id="languageId" name="languageId">
                 <div class="form-group">
                     <label for="languageName">Language Name</label>
                     <input type="text" id="languageName" name="languageName" required>
                 </div>
                 <div class="form-group">
-                    <label for="languageCode">Language Code</label>
-                    <input type="text" id="languageCode" name="languageCode" 
-                           pattern="[a-z]{2}" title="Two letter language code (e.g., en, es, fr)" required>
+                    <label for="level">Level</label>
+                    <select id="level" name="level" required>
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Advanced">Advanced</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" required></textarea>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="hideModal('newLanguageModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Language</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </form>
         </div>
