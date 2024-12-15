@@ -102,14 +102,20 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
             <div class="existing-exercises">
                 <div class="exercises-header">
                     <h2>Existing Exercises</h2>
-                    <select id="filterLanguage" class="language-filter">
-                        <option value="">All Languages</option>
-                        <?php foreach ($languages as $language): ?>
-                            <option value="<?= $language['languageId'] ?>">
-                                <?= htmlspecialchars($language['languageName']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <div class="exercises-filters">
+                        <div class="search-bar">
+                            <input type="text" id="exerciseSearch" placeholder="Search exercises...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <select id="filterLanguage" class="language-filter">
+                            <option value="">All Languages</option>
+                            <?php foreach ($languages as $language): ?>
+                                <option value="<?= $language['languageId'] ?>">
+                                    <?= htmlspecialchars($language['languageName']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
                 
                 <div class="exercises-grid" id="exercisesGrid">

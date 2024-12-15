@@ -14,6 +14,7 @@ class ExerciseCreator {
                 if (modal) modal.style.display = 'block';
             });
         }
+        this.setupSearchFunctionality();
     }
 
     init() {
@@ -530,6 +531,28 @@ class ExerciseCreator {
             answerBox.innerHTML = '<div class="placeholder">Drag word tiles here to create the correct answer</div>';
         }
         if (wordTiles) wordTiles.innerHTML = '';
+    }
+
+    setupSearchFunctionality() {
+        const searchInput = document.getElementById('exerciseSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const exerciseCards = document.querySelectorAll('.exercise-card');
+                
+                exerciseCards.forEach(card => {
+                    const question = card.querySelector('h3').textContent.toLowerCase();
+                    const category = card.querySelector('.category').textContent.toLowerCase();
+                    const language = card.querySelector('.language').textContent.toLowerCase();
+                    
+                    const matches = question.includes(searchTerm) || 
+                                  category.includes(searchTerm) || 
+                                  language.includes(searchTerm);
+                                      
+                    card.style.display = matches ? 'flex' : 'none';
+                });
+            });
+        }
     }
 }
 
