@@ -57,19 +57,34 @@ $currentCourses = $stmt->fetchAll();
     <div class="profile-container">
         <h1>My Profile</h1>
         
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value"><?php echo $totalWords; ?></div>
-                <div class="stat-label">Total Words Learned</div>
+        <div class="user-info">
+            <div class="info-card">
+                <h3>Personal Information</h3>
+                <p><strong>Name:</strong> <?php echo htmlspecialchars($user['firstName'] . ' ' . $user['lastName']); ?></p>
+                <p><strong>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
+                <p><strong>Member Since:</strong> <?php echo date('F j, Y', strtotime($user['joinDate'])); ?></p>
+                <p><strong>Account Type:</strong> <?php echo ucfirst($user['role']); ?></p>
             </div>
-            <div class="stat-card">
-                <div class="stat-value"><?php echo count($currentCourses); ?></div>
-                <div class="stat-label">Languages Learning</div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value"><?php echo $totalWords; ?></div>
+                    <div class="stat-label">Words Learned</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"><?php echo $correctAttempts; ?></div>
+                    <div class="stat-label">Correct Answers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"><?php echo $totalAttempts; ?></div>
+                    <div class="stat-label">Total Attempts</div>
+                </div>
             </div>
         </div>
 
+        <!-- Password Change Form -->
         <div class="password-section">
-            <h2>Change Password</h2>
+            <h3>Change Password</h3>
             <form class="password-form" action="../actions/update_password.php" method="POST">
                 <div class="form-group">
                     <label for="current_password">Current Password</label>

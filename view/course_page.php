@@ -27,16 +27,24 @@ try {
         exit();
     }
 
-    // Get learned words count
+    // Get learned words count and total words
     $stmt = $pdo->prepare("
-        SELECT COUNT(*) as wordsLearned 
-        FROM learned_words 
-        WHERE userId = ? AND wordId IN (
-            SELECT wordId FROM words WHERE languageId = ?
-        )
+        SELECT 
+            (SELECT COUNT(DISTINCT lw.wordId) 
+             FROM learned_words lw 
+             JOIN words w ON lw.wordId = w.wordId 
+             WHERE lw.userId = ? AND w.languageId = ?) as wordsLearned,
+            (SELECT COUNT(*) 
+             FROM words 
+             WHERE languageId = ?) as totalWords
     ");
-    $stmt->execute([$_SESSION['user_id'], $languageId]);
+    $stmt->execute([$_SESSION['user_id'], $languageId, $languageId]);
     $progress = $stmt->fetch();
+
+    // Calculate percentage
+    $progressPercentage = ($progress['totalWords'] > 0) 
+        ? round(($progress['wordsLearned'] / $progress['totalWords']) * 100) 
+        : 0;
 
     // Replace the hardcoded categories array with database query
     try {
@@ -84,9 +92,11 @@ try {
         </div>
         <div class="course-progress">
             <div class="progress-bar">
-                <div class="progress" style="width: <?php echo ($progress['wordsLearned'] ?? 0) ?>%"></div>
+                <div class="progress" style="width: <?php echo $progressPercentage; ?>%"></div>
             </div>
-            <span class="progress-text"><?php echo $progress['wordsLearned'] ?? 0 ?> words learned</span>
+            <span class="progress-text">
+                <?php echo $progress['wordsLearned']; ?> / <?php echo $progress['totalWords']; ?> words learned
+            </span>
         </div>
         <a href="dashboard.php" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i>
