@@ -587,3 +587,43 @@
     box-shadow: 0 0 0 3px rgba(34, 116, 165, 0.1);
 }
 
+/* Content Header Styles */
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 1rem 0;
+}
+
+.content-header h1 {
+    color: var(--black);
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.content-header .btn-primary {
+    background-color: var(--mindaro);
+    color: var(--ucla-blue);
+    font-weight: 600;
+    padding: 12px 24px;
+    transition: all 0.3s ease;
+}
+
+.content-header .btn-primary:hover {
+    background-color: var(--ucla-blue);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 116, 165, 0.2);
+}
+
+.content-header .btn-primary i {
+    margin-right: 8px;
+}
+
+/* Adjust Quick Actions Panel spacing */
+.quick-actions-panel {
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+}
+

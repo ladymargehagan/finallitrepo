@@ -29,6 +29,14 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
         <?php include 'includes/sidebar.php'; ?>
         
         <main class="main-content">
+            <!-- Add this content header section -->
+            <div class="content-header">
+                <h1>Exercise Management</h1>
+                <button class="btn btn-primary" onclick="showAddExerciseModal()">
+                    <i class="fas fa-plus"></i> Add New Exercise
+                </button>
+            </div>
+
             <!-- Quick Actions Panel -->
             <div class="quick-actions-panel">
                 <h2>Quick Actions</h2>
