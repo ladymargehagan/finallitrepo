@@ -85,7 +85,7 @@ $currentCourses = $stmt->fetchAll();
                         <div class="progress" style="width: <?php echo $progressPercent; ?>%"></div>
                     </div>
                     <p><?php echo round($progressPercent); ?>% Complete</p>
-                    <a href="french_course.php?id=<?php echo $course['languageId']; ?>&language=<?php echo urlencode($course['languageName']); ?>" 
+                    <a href="course_page.php?id=<?php echo $course['languageId']; ?>&language=<?php echo urlencode($course['languageName']); ?>" 
                        class="btn-update">Continue Learning</a>
                 </div>
             <?php endforeach; ?>
