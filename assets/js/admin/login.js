@@ -6,7 +6,7 @@ document.getElementById('adminLoginForm').addEventListener('submit', async (e) =
     const errorMessage = document.getElementById('error-message');
     
     try {
-        const response = await fetch('../../actions/admin/login.php', {
+        const response = await fetch('../../actions/admin/login_admin.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

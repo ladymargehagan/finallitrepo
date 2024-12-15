@@ -3,59 +3,178 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--primary), #0D2B3E);
+    background: linear-gradient(135deg, 
+        var(--ucla-blue) 0%, 
+        rgba(34, 116, 165, 0.8) 50%,
+        var(--mindaro) 100%);
+    font-family: var(--font-body);
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-login::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+        transparent 48%, 
+        rgba(255,255,255,0.05) 50%, 
+        transparent 52%);
+    background-size: 20px 20px;
+    animation: movePattern 15s linear infinite;
+    z-index: 1;
+}
+
+@keyframes movePattern {
+    0% {
+        background-position: 0 0;
+    }
+    100% {
+        background-position: 50px 50px;
+    }
 }
 
 .login-container {
-    background: var(--white);
+    background: rgba(255, 255, 255, 0.95);
     padding: 2.5rem;
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(8px);
     width: 100%;
-    max-width: 420px;
+    max-width: 400px;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.login-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
 }
 
 .login-container h1 {
-    color: var(--primary);
-    margin-bottom: 2rem;
+    color: var(--ucla-blue);
     text-align: center;
+    margin-bottom: 2rem;
     font-family: var(--font-heading);
     font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
-.form-group {
+.login-container h1 i {
+    color: var(--coral);
+}
+
+.admin-form .form-group {
     margin-bottom: 1.5rem;
+    position: relative;
 }
 
-.form-group label {
+.admin-form label {
     display: block;
     margin-bottom: 0.5rem;
     color: var(--gray);
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.form-group input {
+.admin-form label i {
+    color: var(--ucla-blue);
+}
+
+.admin-form input {
     width: 100%;
-    padding: 0.875rem;
-    border: 1px solid var(--border-color);
+    padding: 12px 16px;
+    border: 2px solid rgba(34, 116, 165, 0.2);
     border-radius: 8px;
     font-size: 1rem;
-    font-family: var(--font-body);
     transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
 }
 
-.form-group input:focus {
+.admin-form input:focus {
+    border-color: var(--ucla-blue);
     outline: none;
-    border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(34, 116, 165, 0.1);
+    background: rgba(255, 255, 255, 1);
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(to right, var(--ucla-blue), var(--coral));
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(to right, var(--coral), var(--ucla-blue));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 116, 165, 0.3);
 }
 
 .error-message {
-    color: var(--danger);
-    background: rgba(220, 53, 69, 0.1);
-    padding: 1rem;
-    border-radius: 8px;
+    color: var(--coral);
+    text-align: center;
     margin-top: 1rem;
-    display: none;
+    padding: 10px;
+    border-radius: 6px;
     font-size: 0.9rem;
-} 
+    background: rgba(239, 131, 84, 0.1);
+    display: none;
+}
+
+.error-message.show {
+    display: block;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@media (max-width: 480px) {
+    .login-container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+
+    .login-container h1 {
+        font-size: 1.75rem;
+    }
+}
