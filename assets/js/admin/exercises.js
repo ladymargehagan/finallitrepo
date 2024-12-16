@@ -221,42 +221,6 @@ class ExerciseCreator {
         }
     }
 
-    async loadWords() {
-        try {
-            const response = await fetch('../../actions/admin/get_words.php');
-            const data = await response.json();
-            if (data.success) {
-                const wordSelect = document.getElementById('wordSelect');
-                data.words.forEach(word => {
-                    const option = document.createElement('option');
-                    option.value = word.wordId;
-                    option.textContent = word.word_text;
-                    wordSelect.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error('Error loading words:', error);
-        }
-    }
-
-    async loadBankWords() {
-        try {
-            const response = await fetch('../../actions/admin/get_bank_words.php');
-            const data = await response.json();
-            if (data.success) {
-                const bankWordSelect = document.getElementById('bankWordSelect');
-                data.words.forEach(word => {
-                    const option = document.createElement('option');
-                    option.value = word.bankWordId;
-                    option.textContent = word.segment_text;
-                    bankWordSelect.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error('Error loading bank words:', error);
-        }
-    }
-
     setupEventListeners() {
         const saveButton = document.getElementById('saveExercise');
         console.log('Save button found:', saveButton);
@@ -268,45 +232,6 @@ class ExerciseCreator {
             });
         } else {
             console.error('Save button not found in DOM');
-        }
-    }
-
-    async loadTranslations(wordId) {
-        try {
-            const response = await fetch(`../../actions/admin/get_translations.php?wordId=${wordId}`);
-            const data = await response.json();
-            if (data.success) {
-                const translationSelect = document.getElementById('translationSelect');
-                translationSelect.innerHTML = '<option value="">Select translation...</option>';
-                data.translations.forEach(translation => {
-                    const option = document.createElement('option');
-                    option.value = translation.translationId;
-                    option.textContent = translation.translation_text;
-                    translationSelect.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error('Error loading translations:', error);
-        }
-    }
-
-    addWordBankOption() {
-        const bankWordSelect = document.getElementById('bankWordSelect');
-        const selectedOptions = document.getElementById('selectedOptions');
-        
-        if (bankWordSelect.value) {
-            const option = bankWordSelect.options[bankWordSelect.selectedIndex];
-            const wordOption = document.createElement('div');
-            wordOption.className = 'word-option';
-            wordOption.innerHTML = `
-                <span>${option.text}</span>
-                <label>
-                    <input type="radio" name="correct_answer" value="${option.value}">
-                    Correct Answer
-                </label>
-                <button class="remove-option">×</button>
-            `;
-            selectedOptions.appendChild(wordOption);
         }
     }
 
@@ -353,8 +278,6 @@ class ExerciseCreator {
                 wordBank
             };
 
-            console.log('Sending exercise data:', exerciseData);
-
             const response = await fetch('../../actions/admin/save_exercise.php', {
                 method: 'POST',
                 headers: {
@@ -364,9 +287,7 @@ class ExerciseCreator {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Server response:', errorText);
-                throw new Error(`Server returned ${response.status}: ${errorText}`);
+                throw new Error('Failed to save exercise');
             }
             
             const result = await response.json();
@@ -427,9 +348,6 @@ class ExerciseCreator {
                 <span class="language">${exercise.languageName}</span>
             </div>
             <div class="exercise-actions">
-                <button class="btn btn-secondary edit-btn" data-id="${exercise.exerciseId}">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
                 <button class="btn btn-danger delete-btn" data-id="${exercise.exerciseId}">
                     <i class="fas fa-trash"></i> Delete
                 </button>
@@ -437,57 +355,7 @@ class ExerciseCreator {
         `;
 
         // Add event listeners to the buttons
-        const editBtn = card.querySelector('.edit-btn');
         const deleteBtn = card.querySelector('.delete-btn');
-
-        editBtn.addEventListener('click', () => {
-            fetch(`../../actions/admin/get_single_exercise.php?id=${exercise.exerciseId}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Populate form fields
-                    document.getElementById('questionText').value = data.question_text;
-                    document.getElementById('languageSelect').value = data.languageId;
-                    document.getElementById('categorySelect').value = data.categoryId;
-                    document.getElementById('difficultySelect').value = data.difficulty;
-
-                    // Clear existing tiles
-                    const wordTiles = document.querySelector('.word-tiles');
-                    const answerBox = document.getElementById('answerBox');
-                    wordTiles.innerHTML = '';
-                    answerBox.innerHTML = '';
-
-                    // Add word bank tiles
-                    data.wordBank.forEach(word => {
-                        const tile = document.createElement('div');
-                        tile.className = 'word-tile';
-                        tile.draggable = true;
-                        tile.textContent = word.segment_text;
-
-                        if (word.is_answer) {
-                            // Place correct answer in answer box
-                            answerBox.appendChild(tile);
-                        } else {
-                            // Place other words in word bank
-                            wordTiles.appendChild(tile);
-                        }
-                    });
-
-                    // Update save button to indicate editing mode
-                    const saveBtn = document.getElementById('saveExercise');
-                    saveBtn.innerHTML = '<i class="fas fa-save"></i> Update Exercise';
-                    saveBtn.dataset.editId = exercise.exerciseId;
-
-                    // Scroll to the form
-                    document.querySelector('.exercise-form').scrollIntoView({ 
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error loading exercise data');
-                });
-        });
 
         deleteBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to delete this exercise?')) {

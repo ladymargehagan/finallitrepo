@@ -32,9 +32,6 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
             <!-- Add this content header section -->
             <div class="content-header">
                 <h1>Exercise Management</h1>
-                <button class="btn btn-primary" onclick="showAddExerciseModal()">
-                    <i class="fas fa-plus"></i> Add New Exercise
-                </button>
             </div>
 
             <!-- Quick Actions Panel -->
@@ -135,15 +132,6 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
                 </div>
             </div>
         </main>
-    </div>
-
-    <!-- Edit Exercise Modal -->
-    <div id="editExerciseModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Edit Exercise</h2>
-            <!-- The form will be populated by JavaScript -->
-        </div>
     </div>
 
     <!-- Delete Confirmation Modal -->
