@@ -41,6 +41,9 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
                     <button class="btn btn-secondary" id="newCategoryBtn">
                         <i class="fas fa-folder-plus"></i> New Category
                     </button>
+                    <button class="btn btn-danger" id="deleteCategoryBtn">
+                        <i class="fas fa-trash"></i> Delete Category
+                    </button>
                 </div>
             </div>
 
@@ -142,6 +145,33 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
             <p>Are you sure you want to delete this exercise?</p>
             <div class="modal-actions">
                 <button id="confirmDelete" class="btn btn-danger">Delete</button>
+                <button class="btn btn-secondary close-modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add this new modal for category deletion -->
+    <div id="deleteCategoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Delete Category</h2>
+            <p>Select a category to delete. Warning: This will delete all exercises in this category.</p>
+            <div class="modal-body">
+                <select id="categoryToDelete" class="full-width">
+                    <option value="">Select Category</option>
+                    <?php foreach ($categories as $category): ?>
+                        <option value="<?= $category['categoryId'] ?>">
+                            <?= htmlspecialchars($category['categoryName']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <div class="warning-message" style="display: none; color: #dc3545; margin-top: 10px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span></span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="confirmCategoryDelete" class="btn btn-danger">Delete Category</button>
                 <button class="btn btn-secondary close-modal">Cancel</button>
             </div>
         </div>

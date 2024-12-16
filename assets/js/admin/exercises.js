@@ -434,3 +434,84 @@ class ExerciseCreator {
 
 // Initialize the class
 const exerciseCreator = new ExerciseCreator();
+
+// Add these event listeners and functions
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteCategoryModal = document.getElementById('deleteCategoryModal');
+    const deleteCategoryBtn = document.getElementById('deleteCategoryBtn');
+    const categorySelect = document.getElementById('categoryToDelete');
+    const confirmCategoryDelete = document.getElementById('confirmCategoryDelete');
+    const warningMessage = deleteCategoryModal.querySelector('.warning-message');
+
+    // Open delete category modal
+    deleteCategoryBtn.addEventListener('click', function() {
+        deleteCategoryModal.style.display = 'block';
+    });
+
+    // Close modal when clicking the X or Cancel
+    deleteCategoryModal.querySelector('.close').addEventListener('click', function() {
+        deleteCategoryModal.style.display = 'none';
+    });
+
+    deleteCategoryModal.querySelector('.close-modal').addEventListener('click', function() {
+        deleteCategoryModal.style.display = 'none';
+    });
+
+    // Check category usage when selected
+    categorySelect.addEventListener('change', async function() {
+        const categoryId = this.value;
+        if (categoryId) {
+            try {
+                const response = await fetch(`../../actions/admin/check_category_usage.php?categoryId=${categoryId}`);
+                const data = await response.json();
+                
+                if (data.exerciseCount > 0) {
+                    warningMessage.style.display = 'block';
+                    warningMessage.querySelector('span').textContent = 
+                        `This category contains ${data.exerciseCount} exercises that will also be deleted.`;
+                } else {
+                    warningMessage.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking category usage:', error);
+            }
+        }
+    });
+
+    // Handle category deletion
+    confirmCategoryDelete.addEventListener('click', async function() {
+        const categoryId = categorySelect.value;
+        if (!categoryId) {
+            alert('Please select a category to delete');
+            return;
+        }
+
+        if (!confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('../../actions/admin/delete_category.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `categoryId=${categoryId}`
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Category deleted successfully');
+                location.reload(); // Reload page to update categories
+            } else {
+                alert('Error deleting category: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the category');
+        }
+
+        deleteCategoryModal.style.display = 'none';
+    });
+});
