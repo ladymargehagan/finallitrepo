@@ -36,13 +36,20 @@ $recentActivity = $pdo->query("
         u.lastName,
         l.languageName,
         wc.categoryName,
-        ue.enrollmentDate as startTime
-    FROM user_enrollments ue
-    JOIN users u ON ue.userId = u.id
-    JOIN languages l ON ue.languageId = l.languageId
-    JOIN word_categories wc ON wc.categoryId = wc.categoryId
-    WHERE ue.status = 'active'
-    ORDER BY ue.enrollmentDate DESC
+        MAX(wa.attemptDate) as startTime,
+        ROUND(AVG(CASE WHEN wa.isCorrect = 1 THEN 100 ELSE 0 END)) as score
+    FROM word_attempts wa
+    JOIN users u ON wa.userId = u.id
+    JOIN words w ON wa.wordId = w.wordId
+    JOIN languages l ON w.languageId = l.languageId
+    JOIN word_categories wc ON w.categoryId = wc.categoryId
+    WHERE wa.attemptDate IS NOT NULL
+    GROUP BY 
+        u.id,
+        l.languageId,
+        wc.categoryId,
+        DATE_FORMAT(wa.attemptDate, '%Y-%m-%d %H:%i')
+    ORDER BY MAX(wa.attemptDate) DESC
     LIMIT 10
 ")->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -121,27 +128,33 @@ $recentActivity = $pdo->query("
                         <?php foreach ($recentActivity as $activity): ?>
                             <div class="activity-item">
                                 <div class="activity-status">
-                                    <i class="fas fa-book-reader"></i>
+                                    <?php if (isset($activity['score']) && $activity['score'] > 80): ?>
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    <?php else: ?>
+                                        <i class="fas fa-book-reader"></i>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="activity-details">
                                     <p class="activity-text">
                                         <span class="user-name">
                                             <?php echo htmlspecialchars($activity['firstName'] . ' ' . $activity['lastName']); ?>
                                         </span>
-                                        studied 
+                                        practiced 
                                         <span class="language-name">
                                             <?php echo htmlspecialchars($activity['languageName']); ?>
                                         </span>
-                                        in category
+                                        in
                                         <span class="category-name">
                                             <?php echo htmlspecialchars($activity['categoryName']); ?>
                                         </span>
+                                        <?php if (isset($activity['score'])): ?>
+                                            with score <?php echo $activity['score']; ?>%
+                                        <?php endif; ?>
                                     </p>
                                     <span class="activity-time">
                                         <?php 
                                         $attemptDate = new DateTime($activity['startTime']);
-                                        $attemptDate->setTimezone(new DateTimeZone('UTC'));
-                                        $now = new DateTime('now', new DateTimeZone('UTC'));
+                                        $now = new DateTime();
                                         $interval = $now->diff($attemptDate);
                                         
                                         if ($interval->days == 0) {

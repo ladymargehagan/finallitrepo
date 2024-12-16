@@ -187,17 +187,13 @@
 .activity-item {
     display: flex;
     align-items: flex-start;
+    gap: 1rem;
     padding: 1rem;
-    border-bottom: 1px solid var(--gray-light);
-    transition: background-color 0.3s ease;
+    border-bottom: 1px solid #eee;
 }
 
 .activity-item:last-child {
     border-bottom: none;
-}
-
-.activity-item:hover {
-    background-color: var(--gray-light);
 }
 
 .activity-status {
@@ -230,28 +226,24 @@
 }
 
 .activity-text {
-    margin-bottom: 0.25rem;
-    color: var(--gray);
+    margin: 0;
+    line-height: 1.4;
 }
 
 .user-name {
+    font-weight: 600;
     color: var(--ucla-blue);
-    font-weight: 500;
 }
 
-.exercise-name {
-    color: var(--black);
+.language-name,
+.category-name {
     font-weight: 500;
-}
-
-.language-name {
     color: var(--coral);
-    font-weight: 500;
 }
 
 .activity-time {
-    font-size: 0.875rem;
-    color: var(--gray);
+    font-size: 0.85rem;
+    color: #6c757d;
 }
 
 .no-activity {
@@ -312,4 +304,12 @@
 .stat-card .stat-label {
     font-size: 0.75rem;
     opacity: 0.8;
+}
+
+.text-success {
+    color: #28a745;
+}
+
+.activity-status i {
+    font-size: 1.2rem;
 }
