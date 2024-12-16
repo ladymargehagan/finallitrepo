@@ -22,7 +22,11 @@ try {
         }
     }
 
-    // 1. Insert into words table
+    if (empty($correctAnswer)) {
+        throw new Exception('No correct answer specified');
+    }
+
+    // Insert into words table with the correct translation
     $stmt = $pdo->prepare("
         INSERT INTO words (
             word,
@@ -37,7 +41,7 @@ try {
     $stmt->execute([
         $data['question'],
         $data['question'],
-        $correctAnswer,
+        $correctAnswer,  // Store the correct English translation
         $data['languageId'],
         $data['categoryId'],
         $data['difficulty']

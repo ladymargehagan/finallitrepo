@@ -317,18 +317,30 @@ class ExerciseCreator {
             const categoryId = document.getElementById('categorySelect').value;
             const difficulty = document.getElementById('difficultySelect').value;
 
-            if (!questionText || !languageId || !categoryId || !difficulty) {
-                throw new Error('Please fill in all required fields');
+            // Get word bank items and identify the correct answer
+            const wordBank = [];
+            const answerBox = document.getElementById('answerBox');
+            const wordTiles = document.querySelector('.word-tiles');
+
+            // Get the answer from the answer box
+            if (answerBox.children.length > 0) {
+                const answerTile = answerBox.children[0];
+                wordBank.push({
+                    text: answerTile.textContent,
+                    isAnswer: true
+                });
             }
 
-            // Get word bank items
-            const wordBank = Array.from(document.querySelectorAll('.word-bank .word-tile')).map(tile => ({
-                text: tile.textContent,
-                isAnswer: tile.classList.contains('selected')
-            }));
+            // Get remaining words from word tiles
+            Array.from(wordTiles.children).forEach(tile => {
+                wordBank.push({
+                    text: tile.textContent,
+                    isAnswer: false
+                });
+            });
 
-            if (wordBank.length === 0) {
-                throw new Error('Please add at least one word to the word bank');
+            if (!questionText || !languageId || !categoryId || !difficulty || wordBank.length === 0) {
+                throw new Error('Please fill in all required fields and add words to the word bank');
             }
 
             const exerciseData = {
@@ -427,20 +439,19 @@ class ExerciseCreator {
         const deleteBtn = card.querySelector('.delete-btn');
 
         editBtn.addEventListener('click', () => {
-            // Get the exercise data and populate the form
             fetch(`../../actions/admin/get_single_exercise.php?id=${exercise.exerciseId}`)
                 .then(response => response.json())
                 .then(data => {
-                    // Populate the main form instead of a modal
+                    // Populate form fields
                     document.getElementById('questionText').value = data.question_text;
                     document.getElementById('languageSelect').value = data.languageId;
                     document.getElementById('categorySelect').value = data.categoryId;
                     document.getElementById('difficultySelect').value = data.difficulty;
 
-                    // Clear and populate word bank
+                    // Clear existing tiles
                     const wordTiles = document.querySelector('.word-tiles');
-                    wordTiles.innerHTML = '';
                     const answerBox = document.getElementById('answerBox');
+                    wordTiles.innerHTML = '';
                     answerBox.innerHTML = '';
 
                     // Add word bank tiles
@@ -451,9 +462,8 @@ class ExerciseCreator {
                         tile.textContent = word.segment_text;
 
                         if (word.is_answer) {
-                            // Place answer in answer box
-                            const answerTile = tile.cloneNode(true);
-                            answerBox.appendChild(answerTile);
+                            // Place correct answer in answer box
+                            answerBox.appendChild(tile);
                         } else {
                             // Place other words in word bank
                             wordTiles.appendChild(tile);
