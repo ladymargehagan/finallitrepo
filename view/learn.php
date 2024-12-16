@@ -330,6 +330,35 @@ if (isset($_POST['completed']) && $exercise) {
                 display: block;
             }
         }
+        
+        .progress-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 20px;
+            padding: 10px;
+        }
+        
+        .progress-bar {
+            background-color: #f0f0f0;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            background-color: #4CAF50;
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 14px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -348,6 +377,18 @@ if (isset($_POST['completed']) && $exercise) {
     </div>
 
     <main class="learn-container">
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: <?php 
+                    $progress = ($currentProgress / $totalExercises) * 100;
+                    echo $progress . '%';
+                ?>"></div>
+            </div>
+            <div class="progress-text">
+                Question <?php echo $currentProgress + 1; ?> of <?php echo $totalExercises; ?>
+            </div>
+        </div>
+
         <div class="exercise-container">
             <div class="badge">
                 <i class="fas fa-star"></i>
