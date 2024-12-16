@@ -139,6 +139,52 @@ if ($exercise) {
     $wordBank = $wordBankStmt->fetchAll(PDO::FETCH_ASSOC);
     error_log("DEBUG: Word bank results: " . json_encode($wordBank));
 }
+
+// Initialize exercise start time if not set
+if (!isset($_SESSION['exercise_start_time'])) {
+    $_SESSION['exercise_start_time'] = time();
+}
+
+// Initialize exercise results array if not set
+if (!isset($_SESSION['exercise_results'])) {
+    $_SESSION['exercise_results'] = [
+        'answers' => [],
+        'total_words' => $totalExercises,
+        'correct_words' => 0,
+        'start_time' => $_SESSION['exercise_start_time'],
+        'language' => $exercise['languageName'],
+        'category' => $exercise['categoryName']
+    ];
+}
+
+// Store exercise session data only after completion
+if (isset($_POST['completed']) && $exercise) {
+    // Update session with completion data
+    $_SESSION['exercise_results']['end_time'] = time();
+    
+    // Store in database
+    $sessionStmt = $pdo->prepare("
+        INSERT INTO exercise_sessions 
+        (userId, exerciseSetId, startTime, endTime, totalWords, correctWords) 
+        VALUES (?, ?, FROM_UNIXTIME(?), NOW(), ?, ?)
+    ");
+    
+    $sessionStmt->execute([
+        $_SESSION['user_id'],
+        $exercise['exerciseId'],
+        $_SESSION['exercise_start_time'],
+        $_SESSION['exercise_results']['total_words'],
+        $_SESSION['exercise_results']['correct_words']
+    ]);
+    
+    // Store last course and category for "Try Again" button
+    $_SESSION['last_course'] = $languageId;
+    $_SESSION['last_category'] = $categorySlug;
+    
+    // Redirect to results page
+    header('Location: exercise_results.php');
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
