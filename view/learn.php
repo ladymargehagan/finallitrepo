@@ -1,14 +1,31 @@
 <?php
 session_start();
 require_once '../config/db_connect.php';
+require_once '../includes/quiz-functions.php';
 
-// Initialize error message variable
-$errorMessage = null;
+// Check if starting a new quiz in a different category
+if (isset($_GET['category']) && 
+    (!isset($_SESSION['current_category']) || $_SESSION['current_category'] !== $_GET['category'])) {
+    // Clear previous quiz data
+    $_SESSION['exercise_answers'] = [];
+    $_SESSION['completed_exercises'] = [];
+    $_SESSION['exercise_results'] = [];
+    $_SESSION['exercise_start_time'] = time();
+    $_SESSION['current_category'] = $_GET['category'];
+}
 
-// Initialize completed exercises array in session if not exists
+// Initialize completed exercises array if not exists
 if (!isset($_SESSION['completed_exercises'])) {
     $_SESSION['completed_exercises'] = [];
 }
+
+// Initialize exercise answers array if not exists
+if (!isset($_SESSION['exercise_answers'])) {
+    $_SESSION['exercise_answers'] = [];
+}
+
+// Initialize error message variable
+$errorMessage = null;
 
 // Enable error reporting for debugging
 error_reporting(E_ALL);
@@ -107,25 +124,14 @@ try {
     $stmt->execute($params);
     $exercise = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if (!$exercise) {
-        // All exercises completed
-        $_SESSION['completed_exercises'] = [];
-        // Store completion data
-        $sessionStmt = $pdo->prepare("
-            INSERT INTO exercise_sessions 
-            (userId, exerciseSetId, startTime, endTime, totalWords, correctWords) 
-            VALUES (?, ?, FROM_UNIXTIME(?), NOW(), ?, ?)
-        ");
-        
-        $sessionStmt->execute([
-            $_SESSION['user_id'],
-            null,
-            $_SESSION['exercise_start_time'],
-            $totalExercises,
-            count($_SESSION['completed_exercises'])
-        ]);
-        
-        // Redirect to results page or reload for new set
+    if (handleQuizCompletion(
+        $exercise, 
+        $pdo, 
+        $totalExercises, 
+        $_SESSION['user_id'], 
+        $_SESSION['exercise_start_time']
+    )) {
+        // Redirect to reload for new set
         header("Location: " . $_SERVER['REQUEST_URI']);
         exit();
     } else {
@@ -166,18 +172,6 @@ if ($exercise) {
 // Initialize exercise start time if not set
 if (!isset($_SESSION['exercise_start_time'])) {
     $_SESSION['exercise_start_time'] = time();
-}
-
-// Initialize exercise results array if not set
-if (!isset($_SESSION['exercise_results'])) {
-    $_SESSION['exercise_results'] = [
-        'answers' => [],
-        'total_words' => $totalExercises,
-        'correct_words' => 0,
-        'start_time' => $_SESSION['exercise_start_time'],
-        'language' => $exercise['languageName'],
-        'category' => $exercise['categoryName']
-    ];
 }
 
 // Store exercise session data only after completion
