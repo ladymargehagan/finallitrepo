@@ -401,6 +401,42 @@ class LearnGame {
             alert('Failed to end session. Please try again.');
         }
     }
+
+    updateProgressBar() {
+        const progressFill = document.querySelector('.progress-fill');
+        const progressText = document.querySelector('.progress-text');
+        const learningCount = document.querySelector('.learning');
+        const masteredCount = document.querySelector('.mastered');
+        
+        if (!progressFill || !progressText) return;
+
+        // Get current progress numbers
+        const currentProgress = parseInt(progressText.textContent.split('/')[0].trim());
+        const totalExercises = parseInt(progressText.textContent.split('/')[1].trim());
+        const newProgress = currentProgress + 1;
+        
+        // Update progress bar
+        const percentage = (newProgress / totalExercises) * 100;
+        progressFill.style.width = `${percentage}%`;
+        
+        // Update text counters
+        progressText.textContent = `Progress: ${newProgress}/${totalExercises}`;
+        learningCount.innerHTML = `<i class="fas fa-seedling"></i> ${totalExercises - newProgress} left`;
+        masteredCount.innerHTML = `<i class="fas fa-check-circle"></i> ${newProgress} done`;
+        
+        // Add animation
+        progressFill.classList.add('updated');
+        setTimeout(() => {
+            progressFill.classList.remove('updated');
+        }, 300);
+        
+        // Check if all exercises are completed
+        if (newProgress >= totalExercises) {
+            setTimeout(() => {
+                window.location.href = 'exercise_results.php';
+            }, 1000);
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
