@@ -64,16 +64,23 @@ $languages = $pdo->query("SELECT * FROM languages ORDER BY languageName")->fetch
     <div id="languageModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2 id="modalTitle">Add New Language</h2>
+            <h2 id="modalTitle">Edit Language</h2>
             <form id="languageForm">
                 <input type="hidden" id="languageId" name="languageId">
                 <div class="form-group">
                     <label for="languageName">Language Name</label>
-                    <input type="text" id="languageName" name="languageName" required>
+                    <input type="text" 
+                           id="languageName" 
+                           name="languageName" 
+                           class="form-control"
+                           required>
                 </div>
                 <div class="form-group">
                     <label for="level">Level</label>
-                    <select id="level" name="level" required>
+                    <select id="level" 
+                            name="level" 
+                            class="form-control"
+                            required>
                         <option value="Beginner">Beginner</option>
                         <option value="Intermediate">Intermediate</option>
                         <option value="Advanced">Advanced</option>
@@ -81,11 +88,23 @@ $languages = $pdo->query("SELECT * FROM languages ORDER BY languageName")->fetch
                 </div>
                 <div class="form-group">
                     <label for="description">Description</label>
-                    <textarea id="description" name="description" required></textarea>
+                    <textarea id="description" 
+                             name="description" 
+                             class="form-control"
+                             rows="4"
+                             placeholder="Enter a description of the language level..."
+                             required></textarea>
                 </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="hideModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                <div class="modal-actions">
+                    <button type="button" 
+                            class="btn btn-secondary" 
+                            onclick="hideModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" 
+                            class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
                 </div>
             </form>
         </div>

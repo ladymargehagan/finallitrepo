@@ -86,142 +86,119 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
-    backdrop-filter: blur(4px);
 }
 
 .modal-content {
-    background: var(--white);
+    position: relative;
+    background-color: #fff;
     margin: 5% auto;
     padding: 2rem;
-    border-radius: 16px;
     width: 90%;
     max-width: 500px;
-    position: relative;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     animation: modalSlideIn 0.3s ease-out;
 }
 
-/* Delete Modal Specific Styles */
-.modal-content h2 {
+.modal h2 {
     color: var(--ucla-blue);
-    font-size: 1.75rem;
     margin-bottom: 1.5rem;
-    padding-right: 2rem;
+    font-size: 1.75rem;
 }
 
-.warning-message {
-    margin-bottom: 2rem;
+.form-group {
+    margin-bottom: 1.5rem;
 }
 
-.warning-message i {
-    color: #dc3545;
-    font-size: 2rem;
-    margin-bottom: 1rem;
-    display: block;
-}
-
-.warning-message p {
-    color: #dc3545;
-    font-weight: 500;
-    margin-bottom: 1rem;
-}
-
-.warning-message ul {
-    margin: 1rem 0;
-    padding-left: 1.5rem;
-    color: var(--gray);
-}
-
-.warning-message li {
-    margin-bottom: 0.5rem;
-    line-height: 1.4;
-}
-
-.confirmation-input {
-    margin: 1.5rem 0;
-}
-
-.confirmation-input label {
+.form-group label {
     display: block;
     margin-bottom: 0.5rem;
-    color: var(--gray);
     font-weight: 500;
+    color: #333;
 }
 
-.confirmation-input input {
+.form-control {
     width: 100%;
     padding: 0.75rem 1rem;
-    border: 2px solid var(--gray-light);
+    border: 2px solid #e0e0e0;
     border-radius: 8px;
     font-size: 1rem;
-    transition: all 0.3s ease;
+    transition: border-color 0.3s ease;
 }
 
-.confirmation-input input:focus {
+.form-control:focus {
     outline: none;
     border-color: var(--ucla-blue);
     box-shadow: 0 0 0 3px rgba(34, 116, 165, 0.1);
 }
 
-.confirmation-actions {
+.modal-actions {
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
     margin-top: 2rem;
 }
 
-.confirmation-actions button {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 500;
-    font-family: var(--font-body);
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-}
-
-.btn-secondary {
-    background-color: var(--mindaro);
-    color: var(--ucla-blue);
-}
-
-.btn-danger {
-    background-color: var(--coral);
-    color: var(--white);
-}
-
-.btn-secondary:hover {
-    background-color: var(--ucla-blue);
-    color: var(--white);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(34, 116, 165, 0.15);
-}
-
-.btn-danger:hover {
-    background-color: #e67344;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(239, 131, 84, 0.2);
-}
-
-/* Close button */
 .close {
     position: absolute;
-    right: 1.5rem;
-    top: 1.5rem;
+    top: 1rem;
+    right: 1rem;
     font-size: 1.5rem;
-    color: var(--gray);
     cursor: pointer;
+    color: #666;
     transition: all 0.3s ease;
 }
 
 .close:hover {
     color: var(--ucla-blue);
     transform: rotate(90deg);
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Button Styles */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+}
+
+.btn i {
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background-color: var(--mindaro);
+    color: var(--ucla-blue);
+}
+
+.btn-primary:hover {
+    background-color: var(--ucla-blue);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 116, 165, 0.15);
+}
+
+.btn-secondary {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background-color: #d0d0d0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Modal Animation */
@@ -233,6 +210,19 @@
     to {
         transform: translateY(0);
         opacity: 1;
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 1.5rem;
+    }
+
+    .btn {
+        padding: 0.6rem 1.2rem;
     }
 }
 
