@@ -124,12 +124,19 @@ try {
     $stmt->execute($params);
     $exercise = $stmt->fetch(PDO::FETCH_ASSOC);
     
+    // Store language and category info as soon as we have it
+    if ($exercise) {
+        $_SESSION['current_quiz_info'] = [
+            'language' => $exercise['languageName'],
+            'category' => $exercise['categoryName']
+        ];
+    }
+    
     if (handleQuizCompletion(
         $exercise, 
         $pdo, 
         $totalExercises, 
-        $_SESSION['user_id'], 
-        $_SESSION['exercise_start_time']
+        $_SESSION['user_id']
     )) {
         // Redirect to reload for new set
         header("Location: " . $_SERVER['REQUEST_URI']);

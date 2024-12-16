@@ -30,26 +30,28 @@ function handleQuizCompletion($exercise, $pdo, $totalExercises, $userId) {
     if (!$exercise) {
         $endTime = time();
         
-        // Update exercise results for display
+        // Use the stored quiz info instead of trying to get it from the empty exercise
+        $quizInfo = $_SESSION['current_quiz_info'] ?? [
+            'language' => 'Unknown Language',
+            'category' => 'Unknown Category'
+        ];
+        
         $_SESSION['exercise_results'] = [
             'total_words' => $totalExercises,
             'correct_words' => count($_SESSION['completed_exercises']),
             'start_time' => $_SESSION['exercise_start_time'],
             'end_time' => $endTime,
-            'language' => $exercise['languageName'] ?? '',
-            'category' => $exercise['categoryName'] ?? '',
-            'answers' => array_values($_SESSION['exercise_answers'] ?? []) // Convert to indexed array
+            'language' => $quizInfo['language'],
+            'category' => $quizInfo['category'],
+            'answers' => array_values($_SESSION['exercise_answers'] ?? [])
         ];
-        
-        // Store last course and category
-        $_SESSION['last_course'] = $_GET['course'] ?? null;
-        $_SESSION['last_category'] = $_GET['category'] ?? null;
         
         // Clear quiz-specific session data
         $_SESSION['completed_exercises'] = [];
         $_SESSION['exercise_answers'] = [];
         $_SESSION['exercise_start_time'] = null;
         $_SESSION['current_category'] = null;
+        $_SESSION['current_quiz_info'] = null;  // Clear this too
         
         // Redirect to results page
         header('Location: exercise_results.php');

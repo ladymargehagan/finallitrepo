@@ -35,10 +35,17 @@ $timeTaken = isset($results['end_time']) ?
     <div class="results-container">
         <div class="results-header">
             <h1>Exercise Complete!</h1>
-            <p class="category-info">
-                <?php echo htmlspecialchars($results['language']); ?> - 
-                <?php echo htmlspecialchars($results['category']); ?>
-            </p>
+            <h2><?php 
+                error_log("Debug - Results data: " . print_r($_SESSION['exercise_results'], true));  // Add this debug line
+                
+                if (isset($_SESSION['exercise_results'])) {
+                    $language = $_SESSION['exercise_results']['language'] ?? 'Unknown Language';
+                    $category = $_SESSION['exercise_results']['category'] ?? 'Unknown Category';
+                    echo htmlspecialchars($language) . ' - ' . htmlspecialchars($category);
+                } else {
+                    echo "No exercise results available";
+                }
+            ?></h2>
         </div>
 
         <div class="score-card">
