@@ -105,14 +105,32 @@ try {
     $exercise = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$exercise) {
-        // All exercises completed - just reset without showing notice
+        // All exercises completed
         $_SESSION['completed_exercises'] = [];
-        // Reload the page to get new exercises
+        // Store completion data
+        $sessionStmt = $pdo->prepare("
+            INSERT INTO exercise_sessions 
+            (userId, exerciseSetId, startTime, endTime, totalWords, correctWords) 
+            VALUES (?, ?, FROM_UNIXTIME(?), NOW(), ?, ?)
+        ");
+        
+        $sessionStmt->execute([
+            $_SESSION['user_id'],
+            null,
+            $_SESSION['exercise_start_time'],
+            $totalExercises,
+            count($_SESSION['completed_exercises'])
+        ]);
+        
+        // Redirect to results page or reload for new set
         header("Location: " . $_SERVER['REQUEST_URI']);
         exit();
     } else {
-        // Add current exercise to completed list
-        $_SESSION['completed_exercises'][] = $exercise['exerciseId'];
+        // Only add to completed exercises after correct answer
+        if (isset($_SESSION['last_correct']) && $_SESSION['last_correct']) {
+            $_SESSION['completed_exercises'][] = $exercise['exerciseId'];
+            unset($_SESSION['last_correct']); // Reset the flag
+        }
     }
 } catch (PDOException $e) {
     error_log("Database error: " . $e->getMessage());
@@ -403,8 +421,12 @@ if (isset($_POST['completed']) && $exercise) {
                 <?php endforeach; ?>
             </div>
 
-            <div class="action-buttons">
-                <button class="btn btn-primary" id="checkBtn">CHECK</button>
+            <div class="exercise-actions">
+                <button id="checkBtn" class="btn btn-primary">Check Answer</button>
+            </div>
+
+            <div class="next-question-container" style="display: none;">
+                <button id="nextBtn" class="next-button">Next Question</button>
             </div>
         </div>
     </main>
@@ -421,19 +443,77 @@ if (isset($_POST['completed']) && $exercise) {
     <script>
         // Add these variables at the top
         let currentExerciseId = <?php echo json_encode($exercise['exerciseId'] ?? null); ?>;
+        let exerciseType = <?php echo json_encode($exercise['type'] ?? null); ?>;
         
-        // Handle modal close and navigation
         document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('errorModal');
-            if (modal) {
-                // Prevent modal from closing when clicking outside
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) {
-                        e.stopPropagation();
+            const checkBtn = document.getElementById('checkBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const answerBox = document.getElementById('answerBox');
+            const nextContainer = document.querySelector('.next-question-container');
+            
+            // Initially hide the next button container
+            nextContainer.style.display = 'none';
+            
+            checkBtn.addEventListener('click', function() {
+                const answer = Array.from(answerBox.children)
+                    .map(tile => tile.textContent.trim())
+                    .join(' ');
+                    
+                fetch('/actions/check_answer.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        exerciseId: currentExerciseId,
+                        answer: answer
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.isCorrect) {
+                        // Show confetti
+                        confetti({
+                            particleCount: 100,
+                            spread: 70,
+                            origin: { y: 0.6 }
+                        });
+                        
+                        // Add success class to answer box
+                        answerBox.classList.add('correct-answer');
+                        
+                        // Show next button
+                        checkBtn.style.display = 'none';
+                        nextContainer.style.display = 'block';
+                        setTimeout(() => {
+                            nextContainer.classList.add('visible');
+                        }, 50);
+                        
+                        // Disable word bank
+                        disableWordBank();
+                    } else {
+                        // Show wrong answer animation
+                        answerBox.classList.add('wrong-answer', 'shake');
+                        setTimeout(() => {
+                            answerBox.classList.remove('wrong-answer', 'shake');
+                        }, 500);
                     }
                 });
-            }
+            });
+
+            nextBtn.addEventListener('click', function() {
+                window.location.reload();
+            });
         });
+
+        function disableWordBank() {
+            const wordBank = document.querySelector('.word-bank');
+            const tiles = wordBank.getElementsByClassName('word-tile');
+            Array.from(tiles).forEach(tile => {
+                tile.style.pointerEvents = 'none';
+                tile.style.opacity = '0.6';
+            });
+        }
     </script>
 </body>
 </html> 
