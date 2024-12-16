@@ -37,6 +37,11 @@ class LearnGame {
         if (this.elements.checkButton) {
             this.elements.checkButton.addEventListener('click', () => this.checkAnswer());
         }
+
+        const endSessionBtn = document.getElementById('endSessionBtn');
+        if (endSessionBtn) {
+            endSessionBtn.addEventListener('click', () => this.endSession());
+        }
     }
 
     initializeExercise() {
@@ -368,6 +373,33 @@ class LearnGame {
     loadExercise() {
         this.initializeExercise();
         this.exerciseStartTime = Date.now() / 1000;
+    }
+
+    async endSession() {
+        try {
+            console.log('Attempting to end session...');
+            const response = await fetch('../actions/end_session.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                // Store current course and category for the "Try Again" button
+                sessionStorage.setItem('last_course', this.languageId);
+                sessionStorage.setItem('last_category', this.category);
+                
+                // Redirect to results page
+                window.location.href = 'exercise_results.php';
+            } else {
+                console.error('Server returned error:', data.error);
+                alert('Failed to end session. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error ending session:', error);
+            alert('Failed to end session. Please try again.');
+        }
     }
 }
 

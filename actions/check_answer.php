@@ -17,13 +17,15 @@ try {
         throw new Exception('Missing required fields');
     }
 
-    // Get correct sequence from exercise_word_bank
+    // Get correct sequence and wordId from exercise_word_bank
     $stmt = $pdo->prepare("
         SELECT 
             wb.segment_text,
-            ewb.position
+            ewb.position,
+            es.wordId
         FROM exercise_word_bank ewb
         JOIN word_bank wb ON ewb.bankWordId = wb.bankWordId
+        JOIN exercise_sets es ON ewb.exerciseId = es.exerciseId
         WHERE ewb.exerciseId = ?
         AND ewb.is_answer = 1
         ORDER BY ewb.position
@@ -31,6 +33,13 @@ try {
 
     $stmt->execute([$input['exerciseId']]);
     $correctSequence = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    if (empty($correctSequence)) {
+        throw new Exception('No correct answer found for this exercise');
+    }
+
+    // Get wordId from the first result
+    $wordId = $correctSequence[0]['wordId'];
 
     // Build correct answer string
     $correctAnswer = implode(' ', array_map(function($word) {
@@ -47,7 +56,7 @@ try {
         INSERT INTO word_attempts (userId, wordId, isCorrect, attemptDate)
         VALUES (?, ?, ?, NOW())
     ");
-    $stmt->execute([$userId, $wordId, $isCorrect]);
+    $stmt->execute([$_SESSION['user_id'], $wordId, $isCorrect]);
 
     // Update or insert into learned_words table
     $stmt = $pdo->prepare("
@@ -58,7 +67,7 @@ try {
             total_attempts = total_attempts + 1,
             last_attempt_date = NOW()
     ");
-    $stmt->execute([$userId, $wordId, $isCorrect ? 1 : 0, $isCorrect ? 1 : 0]);
+    $stmt->execute([$_SESSION['user_id'], $wordId, $isCorrect ? 1 : 0, $isCorrect ? 1 : 0]);
 
     // Update proficiency based on success rate
     $stmt = $pdo->prepare("
@@ -70,17 +79,20 @@ try {
         END
         WHERE userId = ? AND wordId = ?
     ");
-    $stmt->execute([$userId, $wordId]);
+    $stmt->execute([$_SESSION['user_id'], $wordId]);
 
     $pdo->commit();
 
     echo json_encode([
         'success' => true,
-        'correct' => $isCorrect
+        'correct' => $isCorrect,
+        'correctAnswer' => $correctAnswer
     ]);
 
 } catch (Exception $e) {
-    $pdo->rollBack();
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     error_log("Error in check_answer.php: " . $e->getMessage());
     http_response_code(500);
     echo json_encode([
