@@ -47,6 +47,9 @@ $stmt = $pdo->prepare("
 $stmt->execute([$languageId, $categorySlug]);
 $totalExercises = $stmt->fetchColumn();
 
+// Add this for accurate progress calculation
+$currentProgress = count($_SESSION['completed_exercises']);
+
 // Initialize exercise variable
 $exercise = null;
 
@@ -370,24 +373,6 @@ if (isset($_POST['completed']) && $exercise) {
                 }
                 ?>
             </h2>
-
-            <div class="learning-progress-floating">
-                <div class="progress-inner">
-                    <div class="progress-info">
-                        <div class="progress-text">
-                            Progress: <?php 
-                                $completed = isset($_SESSION['completed_exercises']) ? count($_SESSION['completed_exercises']) : 0;
-                                echo $completed . '/' . $totalExercises; 
-                            ?>
-                        </div>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: <?php 
-                            echo ($totalExercises > 0) ? ($completed / $totalExercises) * 100 : 0; 
-                        ?>%"></div>
-                    </div>
-                </div>
-            </div>
 
             <div class="character-display">
                 <div class="icon-container">
