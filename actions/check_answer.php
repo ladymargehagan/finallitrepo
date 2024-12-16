@@ -83,11 +83,57 @@ try {
 
     $pdo->commit();
 
-    echo json_encode([
-        'success' => true,
-        'correct' => $isCorrect,
-        'correctAnswer' => $correctAnswer
-    ]);
+    if ($isCorrect) {
+        // First get the language and category IDs for the current exercise
+        $exerciseInfoStmt = $pdo->prepare("
+            SELECT w.languageId, w.categoryId 
+            FROM words w
+            WHERE w.wordId = ?
+        ");
+        $exerciseInfoStmt->execute([$wordId]);
+        $exerciseInfo = $exerciseInfoStmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Now use these IDs in the progress calculation
+        $progressStmt = $pdo->prepare("
+            SELECT 
+                COUNT(DISTINCT es.exerciseId) as completed,
+                (SELECT COUNT(*) FROM exercise_sets WHERE wordId IN 
+                    (SELECT wordId FROM words WHERE languageId = ? AND categoryId = ?)
+                ) as total
+            FROM exercise_sets es
+            JOIN learned_words lw ON es.wordId = lw.wordId
+            WHERE lw.userId = ? AND lw.proficiency IN ('familiar', 'mastered')
+        ");
+        
+        $progressStmt->execute([
+            $exerciseInfo['languageId'], 
+            $exerciseInfo['categoryId'], 
+            $_SESSION['user_id']
+        ]);
+        $progress = $progressStmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Add safety check for division by zero
+        $progressPercentage = $progress['total'] > 0 
+            ? ($progress['completed'] / $progress['total']) * 100 
+            : 0;
+        
+        echo json_encode([
+            'success' => true,
+            'correct' => $isCorrect,
+            'correctAnswer' => $correctAnswer,
+            'progress' => [
+                'progress' => $progressPercentage,
+                'completed' => $progress['completed'],
+                'total' => max(1, $progress['total']) // Ensure total is at least 1
+            ]
+        ]);
+    } else {
+        echo json_encode([
+            'success' => true,
+            'correct' => false,
+            'correctAnswer' => $correctAnswer
+        ]);
+    }
 
 } catch (Exception $e) {
     if ($pdo->inTransaction()) {

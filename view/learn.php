@@ -369,19 +369,16 @@ if (isset($_POST['completed']) && $exercise) {
                     <div class="progress-inner">
                         <div class="progress-info">
                             <div class="progress-text">
-                                Progress: <?php echo count($_SESSION['completed_exercises']); ?>/<?php echo $totalExercises; ?>
-                            </div>
-                            <div class="proficiency-counts">
-                                <span class="learning">
-                                    <i class="fas fa-seedling"></i> <?php echo $totalExercises - count($_SESSION['completed_exercises']); ?> left
-                                </span>
-                                <span class="mastered">
-                                    <i class="fas fa-check-circle"></i> <?php echo count($_SESSION['completed_exercises']); ?> done
-                                </span>
+                                Progress: <?php 
+                                    $completed = isset($_SESSION['completed_exercises']) ? count($_SESSION['completed_exercises']) : 0;
+                                    echo $completed . '/' . $totalExercises; 
+                                ?>
                             </div>
                         </div>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: <?php echo ($totalExercises > 0) ? (count($_SESSION['completed_exercises']) / $totalExercises) * 100 : 0; ?>%"></div>
+                            <div class="progress-fill" style="width: <?php 
+                                echo ($totalExercises > 0) ? ($completed / $totalExercises) * 100 : 0; 
+                            ?>%"></div>
                         </div>
                     </div>
                 </div>

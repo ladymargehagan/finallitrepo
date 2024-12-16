@@ -116,32 +116,31 @@ class LearnGame {
     }
 
     updateProgress(progressData) {
-        console.log('Updating progress with:', progressData); // Debug log
-        
         if (!progressData) return;
-
-        // Update progress bar
-        if (this.elements.progressElements.bar) {
-            this.elements.progressElements.bar.style.width = `${progressData.progress}%`;
-        }
-
-        // Update progress text
-        if (this.elements.progressElements.percentage) {
-            this.elements.progressElements.percentage.textContent = 
-                `Learning Progress: ${Math.round(progressData.progress)}%`;
-        }
-
-        // Update counts
-        if (progressData.counts) {
-            const counts = progressData.counts;
-            if (this.elements.progressElements.learning) {
-                this.elements.progressElements.learning.textContent = `Learning: ${counts.learning_count}`;
+        
+        // Only update progress if we have new progress data
+        if (progressData.progress !== undefined) {
+            if (this.elements.progressElements.bar) {
+                this.elements.progressElements.bar.style.width = `${progressData.progress}%`;
             }
-            if (this.elements.progressElements.familiar) {
-                this.elements.progressElements.familiar.textContent = `Familiar: ${counts.familiar_count}`;
+
+            if (this.elements.progressElements.percentage) {
+                this.elements.progressElements.percentage.textContent = 
+                    `Learning Progress: ${Math.round(progressData.progress)}%`;
             }
-            if (this.elements.progressElements.mastered) {
-                this.elements.progressElements.mastered.textContent = `Mastered: ${counts.mastered_count}`;
+
+            // Update counts only if provided
+            if (progressData.counts) {
+                const counts = progressData.counts;
+                if (this.elements.progressElements.learning) {
+                    this.elements.progressElements.learning.textContent = `Learning: ${counts.learning_count}`;
+                }
+                if (this.elements.progressElements.familiar) {
+                    this.elements.progressElements.familiar.textContent = `Familiar: ${counts.familiar_count}`;
+                }
+                if (this.elements.progressElements.mastered) {
+                    this.elements.progressElements.mastered.textContent = `Mastered: ${counts.mastered_count}`;
+                }
             }
         }
     }
