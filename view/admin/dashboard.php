@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('UTC');
 require_once '../../config/db_connect.php';
 
 if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
@@ -139,19 +140,26 @@ $recentActivity = $pdo->query("
                                     <span class="activity-time">
                                         <?php 
                                         $attemptDate = new DateTime($activity['startTime']);
-                                        $now = new DateTime();
+                                        $attemptDate->setTimezone(new DateTimeZone('UTC'));
+                                        $now = new DateTime('now', new DateTimeZone('UTC'));
                                         $interval = $now->diff($attemptDate);
                                         
                                         if ($interval->days == 0) {
                                             if ($interval->h == 0) {
-                                                echo $interval->i . ' minutes ago';
+                                                if ($interval->i == 0) {
+                                                    echo 'Just now';
+                                                } else {
+                                                    echo $interval->i . ' minute' . ($interval->i > 1 ? 's' : '') . ' ago';
+                                                }
                                             } else {
-                                                echo $interval->h . ' hours ago';
+                                                echo $interval->h . ' hour' . ($interval->h > 1 ? 's' : '') . ' ago';
                                             }
                                         } else if ($interval->days == 1) {
                                             echo 'Yesterday';
+                                        } else if ($interval->days < 7) {
+                                            echo $interval->days . ' days ago';
                                         } else {
-                                            echo $attemptDate->format('M j, Y g:i A');
+                                            echo $attemptDate->format('M j, Y');
                                         }
                                         ?>
                                     </span>
