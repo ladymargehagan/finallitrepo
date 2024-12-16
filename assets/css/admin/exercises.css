@@ -636,3 +636,92 @@
     font-style: italic;
 }
 
+.exercise-card .card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+.exercise-card .btn-edit {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.exercise-card .btn-edit:hover {
+    background-color: #357abd;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.exercise-card .btn-edit i {
+    font-size: 14px;
+}
+
+.exercise-editor {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.exercise-editor .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.exercise-editor label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.exercise-editor input,
+.exercise-editor select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.word-bank-editor {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.option-input {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.remove-option {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+#addOption {
+    margin-top: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+

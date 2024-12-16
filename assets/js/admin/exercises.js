@@ -382,6 +382,18 @@ class ExerciseCreator {
             }
         });
 
+        const actionButtons = document.createElement('div');
+        actionButtons.className = 'card-actions';
+        
+        const editButton = document.createElement('a');
+        editButton.href = `edit-exercise.php?id=${exercise.exerciseId}`;
+        editButton.className = 'btn btn-edit';
+        editButton.innerHTML = '<i class="fas fa-edit"></i> Edit';
+        
+        actionButtons.appendChild(editButton);
+        actionButtons.appendChild(deleteBtn);
+        card.appendChild(actionButtons);
+        
         return card;
     }
 
