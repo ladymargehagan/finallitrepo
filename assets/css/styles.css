@@ -48,7 +48,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn i {
-    font-size: 1.2em;
+    font-size: 1em;
 }
 
 .btn:hover {
@@ -103,9 +103,9 @@ h1, h2, h3, h4, h5, h6 {
     align-items: center;
     justify-content: center;
     padding: 0.8rem 1.5rem;
-    width: 120px;
+    width: 130px;
     height: 45px;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 500;
     border-radius: 8px;
     text-decoration: none;
@@ -279,4 +279,38 @@ h1, h2, h3, h4, h5, h6 {
     .logo-image {
         height: 50px;
     }
+}
+
+/* Add to your styles.css */
+.btn-login {
+    background-color: var(--mindaro);
+    color: var(--ucla-blue);
+    padding: 10px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-login i {
+    font-size: 1.2em;
+}
+
+.btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 116, 165, 0.15);
+}
+
+/* Update the auth-buttons class */
+.auth-buttons {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.auth-buttons a {
+    text-decoration: none;
 }
