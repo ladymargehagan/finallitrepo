@@ -2,6 +2,14 @@
 session_start();
 require_once '../config/db_connect.php';
 
+// Initialize error message variable
+$errorMessage = null;
+
+// Initialize completed exercises array in session if not exists
+if (!isset($_SESSION['completed_exercises'])) {
+    $_SESSION['completed_exercises'] = [];
+}
+
 // Enable error reporting for debugging
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -22,102 +30,98 @@ if (!isset($_SESSION['user_id'])) {
 $languageId = isset($_GET['course']) ? (int)$_GET['course'] : 0;
 $categorySlug = isset($_GET['category']) ? htmlspecialchars($_GET['category']) : '';
 
-
-// Execute the query
+// Get total exercises count
 $stmt = $pdo->prepare("
-    SELECT 
-        es.exerciseId,
-        es.wordId,
-        w.word,
-        w.pronunciation,
-        w.context_type,
-        w.difficulty,
-        es.type,
-        wc.categoryName,
-        wc.categoryId,
-        l.languageName
-    FROM exercise_sets es
-    JOIN words w ON es.wordId = w.wordId
-    JOIN word_categories wc ON w.categoryId = wc.categoryId
-    JOIN languages l ON w.languageId = l.languageId
-    WHERE w.languageId = ? 
-    AND wc.categorySlug = ?
-    ORDER BY RAND()
-    LIMIT 1
+    SELECT COUNT(*) as total 
+    FROM exercise_sets 
+    WHERE wordId IN (
+        SELECT wordId 
+        FROM words 
+        WHERE languageId = ? AND categoryId = (
+            SELECT categoryId 
+            FROM word_categories 
+            WHERE categorySlug = ?
+        )
+    )
 ");
+$stmt->execute([$languageId, $categorySlug]);
+$totalExercises = $stmt->fetchColumn();
 
-try {
-    $stmt->execute([$languageId, $categorySlug]);
-    $exercise = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    // Debug the result
-    error_log("DEBUG: Query result: " . json_encode($exercise));
-    
-    if (!$exercise) {
-        // Debug why no exercises were found
-        error_log("DEBUG: No exercises found. Checking data:");
-        
-        // Check if words exist for this language
-        $wordCheck = $pdo->prepare("SELECT COUNT(*) FROM words WHERE languageId = ?");
-        $wordCheck->execute([$languageId]);
-        $wordCount = $wordCheck->fetchColumn();
-        error_log("Words for language $languageId: $wordCount");
-        
-        // Check if category exists
-        $catCheck = $pdo->prepare("SELECT COUNT(*) FROM word_categories WHERE categorySlug = ?");
-        $catCheck->execute([$categorySlug]);
-        $catCount = $catCheck->fetchColumn();
-        error_log("Category with slug '$categorySlug': $catCount");
-        
-        // Check translations
-        $transCheck = $pdo->prepare("
-            SELECT COUNT(*) 
-            FROM words w 
-            JOIN translations t ON w.wordId = t.wordId 
-            WHERE w.languageId = ?
-        ");
-        $transCheck->execute([$languageId]);
-        $transCount = $transCheck->fetchColumn();
-        error_log("Translations for language $languageId: $transCount");
-        
-        // Set exercise to empty array instead of redirecting
-        $exercise = [];
-    }
-} catch (PDOException $e) {
-    error_log("DEBUG: Database error: " . $e->getMessage());
-    $exercise = [];
+// Initialize exercise variable
+$exercise = null;
+
+// Main exercise query with NOT IN clause to exclude completed exercises
+if (empty($_SESSION['completed_exercises'])) {
+    // If no completed exercises, get any exercise
+    $stmt = $pdo->prepare("
+        SELECT 
+            es.exerciseId,
+            es.wordId,
+            w.word,
+            w.pronunciation,
+            w.context_type,
+            w.difficulty,
+            es.type,
+            wc.categoryName,
+            wc.categoryId,
+            l.languageName
+        FROM exercise_sets es
+        JOIN words w ON es.wordId = w.wordId
+        JOIN word_categories wc ON w.categoryId = wc.categoryId
+        JOIN languages l ON w.languageId = l.languageId
+        WHERE w.languageId = ? 
+        AND wc.categorySlug = ?
+        LIMIT 1
+    ");
+    $params = [$languageId, $categorySlug];
+} else {
+    // If there are completed exercises, exclude them
+    $stmt = $pdo->prepare("
+        SELECT 
+            es.exerciseId,
+            es.wordId,
+            w.word,
+            w.pronunciation,
+            w.context_type,
+            w.difficulty,
+            es.type,
+            wc.categoryName,
+            wc.categoryId,
+            l.languageName
+        FROM exercise_sets es
+        JOIN words w ON es.wordId = w.wordId
+        JOIN word_categories wc ON w.categoryId = wc.categoryId
+        JOIN languages l ON w.languageId = l.languageId
+        WHERE w.languageId = ? 
+        AND wc.categorySlug = ?
+        AND es.exerciseId NOT IN (" . implode(',', $_SESSION['completed_exercises']) . ")
+        LIMIT 1
+    ");
+    $params = [$languageId, $categorySlug];
 }
 
 try {
-    $stmt->execute([$languageId, $categorySlug]);
+    $stmt->execute($params);
     $exercise = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    // Initialize error message
-    $errorMessage = null;
-    
-    // Check for specific error conditions
     if (!$exercise) {
-        // Check what's missing
-        $wordCheck = $pdo->prepare("SELECT COUNT(*) FROM words WHERE languageId = ? AND categoryId = (SELECT categoryId FROM word_categories WHERE categorySlug = ?)");
-        $wordCheck->execute([$languageId, $categorySlug]);
-        $wordCount = $wordCheck->fetchColumn();
-        
-        if ($wordCount == 0) {
-            $errorMessage = "No words available in this category yet. Please try another category.";
-        } else {
-            $errorMessage = "Unable to load exercise. Please try again later.";
-        }
+        // All exercises completed
+        $errorMessage = "You have completed all exercises in this category!";
+        // Reset completed exercises for this category
+        $_SESSION['completed_exercises'] = [];
+    } else {
+        // Add current exercise to completed list
+        $_SESSION['completed_exercises'][] = $exercise['exerciseId'];
     }
 } catch (PDOException $e) {
     $errorMessage = "Database error occurred. Please try again later.";
     error_log("Database error: " . $e->getMessage());
 }
 
-// After getting the exercise, add debug logging
+// Get word bank options only if we have an exercise
 if ($exercise) {
     error_log("DEBUG: Exercise found: " . json_encode($exercise));
     
-    // Get word bank options with more detailed query
     $wordBankStmt = $pdo->prepare("
         SELECT 
             wb.bankWordId,
@@ -135,23 +139,6 @@ if ($exercise) {
     $wordBank = $wordBankStmt->fetchAll(PDO::FETCH_ASSOC);
     error_log("DEBUG: Word bank results: " . json_encode($wordBank));
 }
-
-// Add this near your other queries
-$stmt = $pdo->prepare("
-    SELECT COUNT(*) as total 
-    FROM exercise_sets 
-    WHERE wordId IN (
-        SELECT wordId 
-        FROM words 
-        WHERE languageId = ? AND categoryId = (
-            SELECT categoryId 
-            FROM word_categories 
-            WHERE categorySlug = ?
-        )
-    )
-");
-$stmt->execute([$languageId, $categorySlug]);
-$totalExercises = $stmt->fetchColumn();
 ?>
 
 <!DOCTYPE html>
