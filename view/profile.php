@@ -23,6 +23,27 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$userId]);
 $currentCourses = $stmt->fetchAll();
+
+// Get overall statistics
+$statsQuery = $pdo->prepare("
+    SELECT 
+        COUNT(*) as total_words,
+        SUM(correct_attempts) as total_correct,
+        SUM(total_attempts) as total_attempts,
+        SUM(CASE WHEN proficiency = 'mastered' THEN 1 ELSE 0 END) as mastered_count,
+        SUM(CASE WHEN proficiency = 'familiar' THEN 1 ELSE 0 END) as familiar_count,
+        SUM(CASE WHEN proficiency = 'learning' THEN 1 ELSE 0 END) as learning_count
+    FROM learned_words 
+    WHERE userId = ?
+");
+$statsQuery->execute([$userId]);
+$stats = $statsQuery->fetch();
+
+// Calculate percentages for progress bars
+$totalWords = $stats['total_words'] ?: 1; // Prevent division by zero
+$masteredPercent = round(($stats['mastered_count'] / $totalWords) * 100);
+$familiarPercent = round(($stats['familiar_count'] / $totalWords) * 100);
+$learningPercent = round(($stats['learning_count'] / $totalWords) * 100);
 ?>
 
 <!DOCTYPE html>
@@ -65,16 +86,35 @@ $currentCourses = $stmt->fetchAll();
 
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-value"><?php echo $totalWords; ?></div>
+                    <div class="stat-value"><?php echo $stats['total_words']; ?></div>
                     <div class="stat-label">Words Learned</div>
+                    <div class="proficiency-breakdown">
+                        <div class="progress-bar">
+                            <div class="progress-segment mastered" style="width: <?php echo $masteredPercent; ?>%"></div>
+                            <div class="progress-segment familiar" style="width: <?php echo $familiarPercent; ?>%"></div>
+                            <div class="progress-segment learning" style="width: <?php echo $learningPercent; ?>%"></div>
+                        </div>
+                        <div class="proficiency-legend">
+                            <span class="mastered"><?php echo $stats['mastered_count']; ?> Mastered</span>
+                            <span class="familiar"><?php echo $stats['familiar_count']; ?> Familiar</span>
+                            <span class="learning"><?php echo $stats['learning_count']; ?> Learning</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value"><?php echo $correctAttempts; ?></div>
+                    <div class="stat-value"><?php echo $stats['total_correct']; ?></div>
                     <div class="stat-label">Correct Answers</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value"><?php echo $totalAttempts; ?></div>
-                    <div class="stat-label">Total Attempts</div>
+                    <div class="accuracy-rate">
+                        <?php 
+                        $accuracy = $stats['total_attempts'] > 0 
+                            ? round(($stats['total_correct'] / $stats['total_attempts']) * 100) 
+                            : 0;
+                        ?>
+                        <div class="accuracy-bar">
+                            <div class="accuracy-fill" style="width: <?php echo $accuracy; ?>%"></div>
+                        </div>
+                        <div class="accuracy-text"><?php echo $accuracy; ?>% Accuracy</div>
+                    </div>
                 </div>
             </div>
         </div>

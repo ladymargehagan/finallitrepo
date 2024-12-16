@@ -248,3 +248,62 @@
     min-width: 140px;
     justify-content: center;
 } 
+
+.proficiency-breakdown {
+    margin-top: 1rem;
+}
+
+.progress-bar {
+    height: 8px;
+    background: var(--gray-light);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-segment {
+    height: 100%;
+    float: left;
+    transition: width 0.3s ease;
+}
+
+.progress-segment.mastered { background: #28a745; }
+.progress-segment.familiar { background: var(--ucla-blue); }
+.progress-segment.learning { background: var(--coral); }
+
+.proficiency-legend {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--gray);
+}
+
+.proficiency-legend span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.accuracy-rate {
+    margin-top: 1rem;
+}
+
+.accuracy-bar {
+    height: 8px;
+    background: var(--gray-light);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.accuracy-fill {
+    height: 100%;
+    background: var(--ucla-blue);
+    transition: width 0.3s ease;
+}
+
+.accuracy-text {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--gray);
+} 
