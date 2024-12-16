@@ -201,25 +201,63 @@
 
 /* Quick Actions Panel */
 .quick-actions-panel {
-    background: var(--white);
-    border-radius: 16px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .quick-actions-panel h2 {
-    color: var(--ucla-blue);
-    margin-bottom: 1rem;
-    font-size: 1.5rem;
-    font-family: var(--font-heading);
+    font-size: 18px;
+    color: #2c3e50;
+    margin-bottom: 16px;
 }
 
 .action-buttons {
     display: flex;
-    gap: 1rem;
+    gap: 12px;
     flex-wrap: wrap;
 }
+
+.action-buttons .btn {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.action-buttons .btn i {
+    font-size: 16px;
+}
+
+.action-buttons .btn-secondary {
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    border: 1px solid #e9ecef;
+}
+
+.action-buttons .btn-secondary:hover {
+    background-color: #e9ecef;
+    transform: translateY(-1px);
+}
+
+.action-buttons .btn-danger {
+    background-color: #fff;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+.action-buttons .btn-danger:hover {
+    background-color: #dc3545;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
 /* Modal Styles */
 .modal {
     display: none;
@@ -724,4 +762,38 @@
     justify-content: flex-end;
     margin-top: 2rem;
 }
+
+/* Delete Category Modal Styling */
+#deleteCategoryModal .modal-content {
+    max-width: 400px;
+    padding: 24px;
+}
+
+#deleteCategoryModal h2 {
+    font-size: 24px;
+    color: #2c3e50;
+    margin-bottom: 12px;
+}
+
+#deleteCategoryModal p {
+    color: #6c757d;
+    margin-bottom: 20px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+#deleteCategoryModal select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    appearance: none;
+    background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/></svg>") no-repeat right 0.75rem center/12px 12px;
+}
+
+#deleteCategoryModal .warning-message {
+    background-color: #fff3cd;
+    border
 
