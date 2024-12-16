@@ -359,26 +359,7 @@ class ExerciseCreator {
 
         deleteBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to delete this exercise?')) {
-                fetch('../../actions/admin/delete_exercise.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ exerciseId: exercise.exerciseId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        card.remove(); // Remove the card from the UI
-                        alert('Exercise deleted successfully');
-                    } else {
-                        throw new Error(data.error || 'Failed to delete exercise');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error deleting exercise');
-                });
+                deleteExercise(exercise.exerciseId);
             }
         });
 
@@ -393,6 +374,8 @@ class ExerciseCreator {
         actionButtons.appendChild(editButton);
         actionButtons.appendChild(deleteBtn);
         card.appendChild(actionButtons);
+        
+        card.setAttribute('data-exercise-id', exercise.exerciseId);
         
         return card;
     }
@@ -515,3 +498,30 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteCategoryModal.style.display = 'none';
     });
 });
+
+function deleteExercise(exerciseId) {
+    fetch('../../actions/admin/delete_exercise.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ exerciseId: exerciseId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the exercise card from the UI
+            const exerciseCard = document.querySelector(`[data-exercise-id="${exerciseId}"]`);
+            if (exerciseCard) {
+                exerciseCard.remove();
+            }
+            alert('Exercise deleted successfully');
+        } else {
+            throw new Error(data.error || 'Failed to delete exercise');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error deleting exercise');
+    });
+}
