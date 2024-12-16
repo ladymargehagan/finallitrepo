@@ -316,39 +316,23 @@ class ExerciseCreator {
             const languageId = document.getElementById('languageSelect').value;
             const categoryId = document.getElementById('categorySelect').value;
             const difficulty = document.getElementById('difficultySelect').value;
-            
-            // Get answer box and word tiles
-            const answerBox = document.getElementById('answerBox');
-            const wordTiles = document.querySelector('.word-tiles').children;
-            
-            // Get answer tiles (correct answer/translation)
-            const answerTiles = Array.from(answerBox.children)
-                .filter(el => el.classList.contains('word-tile'));
-            
-            if (!answerTiles.length) {
-                alert('Please create an answer by dragging words to the answer box');
-                return;
+
+            if (!questionText || !languageId || !categoryId || !difficulty) {
+                throw new Error('Please fill in all required fields');
             }
 
-            const translation = answerTiles[0].textContent.trim();
+            // Get word bank items
+            const wordBank = Array.from(document.querySelectorAll('.word-bank .word-tile')).map(tile => ({
+                text: tile.textContent,
+                isAnswer: tile.classList.contains('selected')
+            }));
 
-            // Create word bank array
-            const wordBank = [
-                // The correct answer/translation
-                {
-                    text: translation,
-                    isAnswer: true
-                },
-                // The distractors
-                ...Array.from(wordTiles).map(tile => ({
-                    text: tile.textContent.trim(),
-                    isAnswer: false
-                }))
-            ];
+            if (wordBank.length === 0) {
+                throw new Error('Please add at least one word to the word bank');
+            }
 
             const exerciseData = {
                 question: questionText,
-                translation: translation, // Add translation explicitly
                 languageId: parseInt(languageId),
                 categoryId: parseInt(categoryId),
                 difficulty,
