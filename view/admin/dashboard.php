@@ -34,22 +34,16 @@ $recentActivity = $pdo->query("
     SELECT 
         u.firstName,
         u.lastName,
-        l.languageName,
-        wc.categoryName,
-        MAX(wa.attemptDate) as startTime,
-        ROUND(AVG(CASE WHEN wa.isCorrect = 1 THEN 100 ELSE 0 END)) as score
-    FROM word_attempts wa
-    JOIN users u ON wa.userId = u.id
-    JOIN words w ON wa.wordId = w.wordId
-    JOIN languages l ON w.languageId = l.languageId
-    JOIN word_categories wc ON w.categoryId = wc.categoryId
-    WHERE wa.attemptDate IS NOT NULL
-    GROUP BY 
-        u.id,
-        l.languageId,
-        wc.categoryId,
-        DATE_FORMAT(wa.attemptDate, '%Y-%m-%d %H:%i')
-    ORDER BY MAX(wa.attemptDate) DESC
+        qr.language_name,
+        qr.category_name,
+        qr.completed_at as startTime,
+        qr.score,
+        qr.correct_answers,
+        qr.total_questions
+    FROM quiz_results qr
+    JOIN users u ON qr.user_id = u.id
+    WHERE qr.completed_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+    ORDER BY qr.completed_at DESC
     LIMIT 10
 ")->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -128,10 +122,12 @@ $recentActivity = $pdo->query("
                         <?php foreach ($recentActivity as $activity): ?>
                             <div class="activity-item">
                                 <div class="activity-status">
-                                    <?php if (isset($activity['score']) && $activity['score'] > 80): ?>
+                                    <?php if ($activity['score'] >= 80): ?>
                                         <i class="fas fa-check-circle text-success"></i>
+                                    <?php elseif ($activity['score'] >= 60): ?>
+                                        <i class="fas fa-star text-warning"></i>
                                     <?php else: ?>
-                                        <i class="fas fa-book-reader"></i>
+                                        <i class="fas fa-book-reader text-info"></i>
                                     <?php endif; ?>
                                 </div>
                                 <div class="activity-details">
@@ -139,17 +135,15 @@ $recentActivity = $pdo->query("
                                         <span class="user-name">
                                             <?php echo htmlspecialchars($activity['firstName'] . ' ' . $activity['lastName']); ?>
                                         </span>
-                                        practiced 
+                                        completed a quiz in 
                                         <span class="language-name">
-                                            <?php echo htmlspecialchars($activity['languageName']); ?>
+                                            <?php echo htmlspecialchars($activity['language_name']); ?>
                                         </span>
-                                        in
-                                        <span class="category-name">
-                                            <?php echo htmlspecialchars($activity['categoryName']); ?>
-                                        </span>
-                                        <?php if (isset($activity['score'])): ?>
-                                            with score <?php echo $activity['score']; ?>%
-                                        <?php endif; ?>
+                                        (<span class="category-name">
+                                            <?php echo htmlspecialchars($activity['category_name']); ?>
+                                        </span>)
+                                        with score <strong><?php echo round($activity['score']); ?>%</strong>
+                                        (<?php echo $activity['correct_answers']; ?>/<?php echo $activity['total_questions']; ?>)
                                     </p>
                                     <span class="activity-time">
                                         <?php 
