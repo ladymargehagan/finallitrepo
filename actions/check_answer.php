@@ -64,6 +64,14 @@ try {
         }
     }
     
+    // Store the attempt result (1 for correct, 0 for incorrect)
+    $_SESSION['attempted_exercises'][$exerciseId] = $isCorrect ? 1 : 0;
+
+    if ($isCorrect) {
+        $_SESSION['correct_answers']++;
+    }
+    $_SESSION['total_attempts']++;
+    
     echo json_encode($response);
     
 } catch (PDOException $e) {

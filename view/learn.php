@@ -7,21 +7,16 @@ require_once '../includes/quiz-functions.php';
 if (isset($_GET['category']) && 
     (!isset($_SESSION['current_category']) || $_SESSION['current_category'] !== $_GET['category'])) {
     // Clear previous quiz data
-    $_SESSION['exercise_answers'] = [];
-    $_SESSION['completed_exercises'] = [];
-    $_SESSION['exercise_results'] = [];
-    $_SESSION['exercise_start_time'] = time();
+    $_SESSION['attempted_exercises'] = [];
     $_SESSION['current_category'] = $_GET['category'];
+    $_SESSION['exercise_start_time'] = time();
+    $_SESSION['correct_answers'] = 0;
+    $_SESSION['total_attempts'] = 0;
 }
 
-// Initialize completed exercises array if not exists
-if (!isset($_SESSION['completed_exercises'])) {
-    $_SESSION['completed_exercises'] = [];
-}
-
-// Initialize exercise answers array if not exists
-if (!isset($_SESSION['exercise_answers'])) {
-    $_SESSION['exercise_answers'] = [];
+// Initialize attempted exercises array if not exists
+if (!isset($_SESSION['attempted_exercises'])) {
+    $_SESSION['attempted_exercises'] = [];
 }
 
 // Initialize error message variable
@@ -47,6 +42,10 @@ if (!isset($_SESSION['user_id'])) {
 $languageId = isset($_GET['course']) ? (int)$_GET['course'] : 0;
 $categorySlug = isset($_GET['category']) ? htmlspecialchars($_GET['category']) : '';
 
+// Store these in session as soon as we have them
+$_SESSION['last_course_id'] = $languageId;
+$_SESSION['last_category_slug'] = $categorySlug;
+
 // Get total exercises count
 $stmt = $pdo->prepare("
     SELECT COUNT(*) as total 
@@ -65,14 +64,14 @@ $stmt->execute([$languageId, $categorySlug]);
 $totalExercises = $stmt->fetchColumn();
 
 // Add this for accurate progress calculation
-$currentProgress = count($_SESSION['completed_exercises']);
+$currentProgress = count($_SESSION['attempted_exercises']);
 
 // Initialize exercise variable
 $exercise = null;
 
 // Main exercise query with NOT IN clause to exclude completed exercises
-if (empty($_SESSION['completed_exercises'])) {
-    // If no completed exercises, get any exercise
+if (empty($_SESSION['attempted_exercises'])) {
+    // If no attempted exercises, get any exercise
     $stmt = $pdo->prepare("
         SELECT 
             es.exerciseId,
@@ -91,11 +90,12 @@ if (empty($_SESSION['completed_exercises'])) {
         JOIN languages l ON w.languageId = l.languageId
         WHERE w.languageId = ? 
         AND wc.categorySlug = ?
+        ORDER BY RAND()
         LIMIT 1
     ");
     $params = [$languageId, $categorySlug];
 } else {
-    // If there are completed exercises, exclude them
+    // Get an exercise that hasn't been attempted yet
     $stmt = $pdo->prepare("
         SELECT 
             es.exerciseId,
@@ -114,7 +114,8 @@ if (empty($_SESSION['completed_exercises'])) {
         JOIN languages l ON w.languageId = l.languageId
         WHERE w.languageId = ? 
         AND wc.categorySlug = ?
-        AND es.exerciseId NOT IN (" . implode(',', $_SESSION['completed_exercises']) . ")
+        AND es.exerciseId NOT IN (" . implode(',', array_keys($_SESSION['attempted_exercises'])) . ")
+        ORDER BY RAND()
         LIMIT 1
     ");
     $params = [$languageId, $categorySlug];
@@ -124,29 +125,25 @@ try {
     $stmt->execute($params);
     $exercise = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    // Store language and category info as soon as we have it
     if ($exercise) {
         $_SESSION['current_quiz_info'] = [
             'language' => $exercise['languageName'],
             'category' => $exercise['categoryName']
         ];
-    }
-    
-    if (handleQuizCompletion(
-        $exercise, 
-        $pdo, 
-        $totalExercises, 
-        $_SESSION['user_id']
-    )) {
-        // Redirect to reload for new set
-        header("Location: " . $_SERVER['REQUEST_URI']);
-        exit();
     } else {
-        // Only add to completed exercises after correct answer
-        if (isset($_SESSION['last_correct']) && $_SESSION['last_correct']) {
-            $_SESSION['completed_exercises'][] = $exercise['exerciseId'];
-            unset($_SESSION['last_correct']); // Reset the flag
-        }
+        // No more exercises available - quiz is complete
+        // Calculate final score
+        $totalExercises = count($_SESSION['attempted_exercises']);
+        $correctAnswers = array_sum($_SESSION['attempted_exercises']);
+        
+        // Store quiz results
+        $finalScore = ($correctAnswers / $totalExercises) * 100;
+        
+        // Store in database and redirect to results
+        // ... (implement storing logic here)
+        
+        header('Location: exercise_results.php');
+        exit();
     }
 } catch (PDOException $e) {
     error_log("Database error: " . $e->getMessage());
