@@ -68,22 +68,30 @@ $timeTaken = isset($results['end_time']) ?
             </div>
         </div>
 
-        <div class="answers-review">
-            <h2>Review Your Answers</h2>
+        <div class="answers-summary">
+            <h2>Answers Summary</h2>
             <?php foreach ($results['answers'] as $answer): ?>
-                <div class="answer-item <?php echo $answer['correct'] ? 'correct' : 'incorrect'; ?>">
-                    <div class="question">
-                        <span class="original-word"><?php echo htmlspecialchars($answer['word']); ?></span>
+                <div class="answer-item <?php echo $answer['correct'] ? 'correct-answer' : 'wrong-answer'; ?>">
+                    <div class="question-word">
+                        <?php echo htmlspecialchars($answer['word']); ?>
                     </div>
-                    <div class="user-answer">
-                        <i class="fas <?php echo $answer['correct'] ? 'fa-check' : 'fa-times'; ?>"></i>
-                        Your answer: <?php echo htmlspecialchars($answer['user_answer']); ?>
+                    <div class="answer-details">
+                        <?php if ($answer['correct']): ?>
+                            <div class="user-correct-answer">
+                                <i class="fas fa-check"></i>
+                                Your answer: <?php echo htmlspecialchars($answer['user_answer']); ?>
+                            </div>
+                        <?php else: ?>
+                            <div class="user-wrong-answer">
+                                <i class="fas fa-times"></i>
+                                Your answer: <?php echo htmlspecialchars($answer['user_answer']); ?>
+                            </div>
+                            <div class="correct-solution">
+                                <i class="fas fa-check"></i>
+                                Correct: <?php echo htmlspecialchars($answer['correct_answer']); ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                    <?php if (!$answer['correct']): ?>
-                        <div class="correct-answer">
-                            Correct answer: <?php echo htmlspecialchars($answer['correct_answer']); ?>
-                        </div>
-                    <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </div>

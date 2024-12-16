@@ -499,32 +499,42 @@ if (isset($_POST['completed']) && $exercise) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.isCorrect) {
-                        // Show confetti
+                        // Show success animation
                         confetti({
                             particleCount: 100,
                             spread: 70,
                             origin: { y: 0.6 }
                         });
                         
-                        // Add success class to answer box
                         answerBox.classList.add('correct-answer');
-                        
-                        // Show next button
-                        checkBtn.style.display = 'none';
-                        nextContainer.style.display = 'block';
-                        setTimeout(() => {
-                            nextContainer.classList.add('visible');
-                        }, 50);
-                        
-                        // Disable word bank
-                        disableWordBank();
                     } else {
                         // Show wrong answer animation
                         answerBox.classList.add('wrong-answer', 'shake');
-                        setTimeout(() => {
-                            answerBox.classList.remove('wrong-answer', 'shake');
-                        }, 500);
                     }
+
+                    // Disable check button and word bank immediately after any attempt
+                    checkBtn.disabled = true;
+                    disableWordBank();
+
+                    // Always show next button after attempt, regardless of correctness
+                    nextContainer.style.display = 'block';
+                    setTimeout(() => {
+                        nextContainer.classList.add('visible');
+                    }, 50);
+
+                    // Store the result
+                    fetch('/actions/store_attempt.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            exerciseId: currentExerciseId,
+                            isCorrect: data.isCorrect,
+                            userAnswer: answer,
+                            correctAnswer: data.correctAnswer
+                        })
+                    });
                 });
             });
 
