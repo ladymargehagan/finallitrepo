@@ -188,11 +188,40 @@ class LearnGame {
         return t * (2 - t);
     }
 
+    showError(message) {
+        const errorModal = document.createElement('div');
+        errorModal.className = 'error-modal';
+        errorModal.innerHTML = `
+            <div class="error-content">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>${message}</p>
+                <button class="close-error">OK</button>
+            </div>
+        `;
+        
+        document.body.appendChild(errorModal);
+        
+        const closeBtn = errorModal.querySelector('.close-error');
+        closeBtn.onclick = () => errorModal.remove();
+        
+        setTimeout(() => errorModal.remove(), 5000); // Auto remove after 5 seconds
+    }
+
     async checkAnswer() {
+        if (!this.elements.answerBox || !this.currentExercise) {
+            console.error('Required elements not found');
+            return;
+        }
+
         const userAnswer = Array.from(this.elements.answerBox.children)
             .map(tile => tile.textContent)
             .join(' ')
             .trim();
+
+        if (!userAnswer) {
+            this.showError('Please provide an answer');
+            return;
+        }
 
         try {
             const response = await fetch('../actions/check_answer.php', {
@@ -207,64 +236,73 @@ class LearnGame {
                 })
             });
 
-            const data = await response.json();
-            console.log('Response data:', data);
-            
-            if (data.success) {
-                if (data.correct) {
-                    this.showResultModal(true);
-                } else {
-                    this.handleWrongAnswer();
-                }
-            } else {
-                throw new Error(data.error);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
+
+            const data = await response.json();
+            
+            if (data.isCorrect) {
+                // Show success animation (keep the confetti)
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+                
+                this.elements.answerBox.classList.add('correct-answer');
+            } else {
+                // Show wrong answer animation (keep the red highlight)
+                this.elements.answerBox.classList.add('wrong-answer', 'shake');
+                this.handleWrongAnswer();
+                await this.storeWrongAnswer();
+            }
+
+            // Disable input and show next button
+            this.disableInput();
+            this.showNextButton();
+
         } catch (error) {
             console.error('Error checking answer:', error);
             this.showError('Failed to check answer. Please try again.');
         }
     }
 
-    showResultModal(isCorrect, message = null) {
-        const overlay = document.createElement('div');
-        overlay.className = 'modal-overlay';
-        
-        const modal = document.createElement('div');
-        modal.className = 'result-modal';
-        
-        const content = `
-            <div class="result-icon ${isCorrect ? 'correct' : 'incorrect'}">
-                ${isCorrect ? '✓' : '✗'}
-            </div>
-            <div class="result-message">
-                ${isCorrect ? 'Correct!' : message || 'Try again!'}
-            </div>
-            <button class="modal-button">
-                ${isCorrect ? 'Continue' : 'OK'}
-            </button>
-        `;
-        
-        modal.innerHTML = content;
-        document.body.appendChild(overlay);
-        document.body.appendChild(modal);
-        
-        setTimeout(() => {
-            overlay.classList.add('show');
-            modal.classList.add('show');
-        }, 10);
-        
-        const button = modal.querySelector('.modal-button');
-        button.onclick = () => {
-            overlay.classList.remove('show');
-            modal.classList.remove('show');
-            setTimeout(() => {
-                overlay.remove();
-                modal.remove();
-                if (isCorrect) {
-                    window.location.href = new URL(window.location.href).toString();
-                }
-            }, 300);
-        };
+    disableInput() {
+        if (this.elements.checkButton) {
+            this.elements.checkButton.disabled = true;
+        }
+        if (this.elements.wordBank) {
+            const tiles = this.elements.wordBank.getElementsByClassName('word-tile');
+            Array.from(tiles).forEach(tile => {
+                tile.style.pointerEvents = 'none';
+                tile.style.opacity = '0.6';
+            });
+        }
+    }
+
+    showNextButton() {
+        const nextContainer = document.querySelector('.next-question-container');
+        if (nextContainer) {
+            nextContainer.style.display = 'block';
+            setTimeout(() => nextContainer.classList.add('visible'), 50);
+        }
+    }
+
+    async storeWrongAnswer() {
+        try {
+            await fetch('../actions/store_wrong_answer.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    exerciseId: this.currentExercise.id
+                })
+            });
+        } catch (error) {
+            console.error('Error storing wrong answer:', error);
+        }
     }
 
     handleCorrectAnswer() {
@@ -278,8 +316,6 @@ class LearnGame {
         
         if (this.hearts <= 0) {
             this.showGameOverModal();
-        } else {
-            this.showResultModal(false, 'Try again!');
         }
     }
 
