@@ -105,17 +105,19 @@ try {
     $exercise = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$exercise) {
-        // All exercises completed
-        $errorMessage = "You have completed all exercises in this category!";
-        // Reset completed exercises for this category
+        // All exercises completed - just reset without showing notice
         $_SESSION['completed_exercises'] = [];
+        // Reload the page to get new exercises
+        header("Location: " . $_SERVER['REQUEST_URI']);
+        exit();
     } else {
         // Add current exercise to completed list
         $_SESSION['completed_exercises'][] = $exercise['exerciseId'];
     }
 } catch (PDOException $e) {
-    $errorMessage = "Database error occurred. Please try again later.";
     error_log("Database error: " . $e->getMessage());
+    header('Location: dashboard.php');
+    exit();
 }
 
 // Get word bank options only if we have an exercise
@@ -309,124 +311,110 @@ if (isset($_POST['completed']) && $exercise) {
     </style>
 </head>
 <body>
-    <?php if ($errorMessage): ?>
-    <!-- Error Modal -->
-    <div id="errorModal" class="modal" style="display: block;">
-        <div class="modal-content">
-            <h3>Notice</h3>
-            <p><?php echo htmlspecialchars($errorMessage); ?></p>
-            <div class="modal-buttons">
-                <button onclick="window.location.href='dashboard.php'" class="btn btn-secondary">
-                    Return to Dashboard
-                </button>
-            </div>
+    <div class="tips-container">
+        <div class="tips-icon">
+            <i class="fas fa-lightbulb"></i>
+        </div>
+        <div class="tips-content">
+            <h4>Quick Tips:</h4>
+            <ul>
+                <li><i class="fas fa-arrows-alt"></i> Drag words from the word bank to form your answer</li>
+                <li><i class="fas fa-mouse-pointer"></i> Double-click any word in your answer to send it back</li>
+                <li><i class="fas fa-exchange-alt"></i> Drag words within your answer to reorder them</li>
+            </ul>
         </div>
     </div>
-    <?php else: ?>
-        <div class="tips-container">
-            <div class="tips-icon">
-                <i class="fas fa-lightbulb"></i>
+
+    <main class="learn-container">
+        <div class="exercise-container">
+            <div class="badge">
+                <i class="fas fa-star"></i>
+                <span class="exercise-type">
+                    <?php echo strtoupper($exercise['type']); ?>
+                    <span class="difficulty-badge <?php echo $exercise['difficulty']; ?>">
+                        <?php echo ucfirst($exercise['difficulty']); ?>
+                    </span>
+                </span>
             </div>
-            <div class="tips-content">
-                <h4>Quick Tips:</h4>
-                <ul>
-                    <li><i class="fas fa-arrows-alt"></i> Drag words from the word bank to form your answer</li>
-                    <li><i class="fas fa-mouse-pointer"></i> Double-click any word in your answer to send it back</li>
-                    <li><i class="fas fa-exchange-alt"></i> Drag words within your answer to reorder them</li>
-                </ul>
+
+            <h2 class="question">
+                <?php 
+                switch($exercise['type']) {
+                    case 'translation':
+                        echo 'Translate this to English';
+                        break;
+                    case 'matching':
+                        echo 'Match the correct translation';
+                        break;
+                    case 'fill-in':
+                        echo 'Complete the sentence';
+                        break;
+                }
+                ?>
+            </h2>
+
+            <div class="learning-progress-floating">
+                <div class="progress-inner">
+                    <div class="progress-info">
+                        <div class="progress-text">
+                            Progress: <?php 
+                                $completed = isset($_SESSION['completed_exercises']) ? count($_SESSION['completed_exercises']) : 0;
+                                echo $completed . '/' . $totalExercises; 
+                            ?>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: <?php 
+                            echo ($totalExercises > 0) ? ($completed / $totalExercises) * 100 : 0; 
+                        ?>%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="character-display">
+                <div class="icon-container">
+                    <i class="fas fa-language fa-3x"></i>
+                </div>
+                <div class="speech-bubble">
+                    <span class="original-text" 
+                          data-pronunciation="<?php echo htmlspecialchars($exercise['pronunciation']); ?>"
+                          data-context="<?php echo htmlspecialchars($exercise['context_type']); ?>">
+                        <?php echo htmlspecialchars($exercise['word']); ?>
+                    </span>
+                    <button class="audio-btn" title="Listen to pronunciation">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="answer-area">
+                <div class="answer-box" id="answerBox"></div>
+            </div>
+
+            <div class="word-bank" id="wordBank">
+                <?php foreach ($wordBank as $word): ?>
+                    <div class="word-tile" 
+                         draggable="true"
+                         data-part="<?php echo htmlspecialchars($word['part_of_speech']); ?>"
+                         data-is-answer="<?php echo $word['is_answer']; ?>"
+                         data-position="<?php echo $word['position']; ?>">
+                        <?php echo htmlspecialchars($word['segment_text']); ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="checkBtn">CHECK</button>
             </div>
         </div>
+    </main>
 
-        <main class="learn-container">
-            <div class="exercise-container">
-                <div class="badge">
-                    <i class="fas fa-star"></i>
-                    <span class="exercise-type">
-                        <?php echo strtoupper($exercise['type']); ?>
-                        <span class="difficulty-badge <?php echo $exercise['difficulty']; ?>">
-                            <?php echo ucfirst($exercise['difficulty']); ?>
-                        </span>
-                    </span>
-                </div>
-
-                <h2 class="question">
-                    <?php 
-                    switch($exercise['type']) {
-                        case 'translation':
-                            echo 'Translate this to English';
-                            break;
-                        case 'matching':
-                            echo 'Match the correct translation';
-                            break;
-                        case 'fill-in':
-                            echo 'Complete the sentence';
-                            break;
-                    }
-                    ?>
-                </h2>
-
-                <div class="learning-progress-floating">
-                    <div class="progress-inner">
-                        <div class="progress-info">
-                            <div class="progress-text">
-                                Progress: <?php 
-                                    $completed = isset($_SESSION['completed_exercises']) ? count($_SESSION['completed_exercises']) : 0;
-                                    echo $completed . '/' . $totalExercises; 
-                                ?>
-                            </div>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: <?php 
-                                echo ($totalExercises > 0) ? ($completed / $totalExercises) * 100 : 0; 
-                            ?>%"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="character-display">
-                    <div class="icon-container">
-                        <i class="fas fa-language fa-3x"></i>
-                    </div>
-                    <div class="speech-bubble">
-                        <span class="original-text" 
-                              data-pronunciation="<?php echo htmlspecialchars($exercise['pronunciation']); ?>"
-                              data-context="<?php echo htmlspecialchars($exercise['context_type']); ?>">
-                            <?php echo htmlspecialchars($exercise['word']); ?>
-                        </span>
-                        <button class="audio-btn" title="Listen to pronunciation">
-                            <i class="fas fa-volume-up"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="answer-area">
-                    <div class="answer-box" id="answerBox"></div>
-                </div>
-
-                <div class="word-bank" id="wordBank">
-                    <?php foreach ($wordBank as $word): ?>
-                        <div class="word-tile" 
-                             draggable="true"
-                             data-part="<?php echo htmlspecialchars($word['part_of_speech']); ?>"
-                             data-is-answer="<?php echo $word['is_answer']; ?>"
-                             data-position="<?php echo $word['position']; ?>">
-                            <?php echo htmlspecialchars($word['segment_text']); ?>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-
-                <div class="action-buttons">
-                    <button class="btn btn-primary" id="checkBtn">CHECK</button>
-                </div>
-            </div>
-        </main>
-
-        <div id="courseData" 
-            data-exercise-id="<?php echo $exercise['exerciseId']; ?>"
-            data-language-id="<?php echo $languageId; ?>"
-            data-category="<?php echo htmlspecialchars($categorySlug); ?>"
-            data-type="<?php echo htmlspecialchars($exercise['type']); ?>"
-            style="display: none;">
+    <div id="courseData" 
+        data-exercise-id="<?php echo $exercise['exerciseId']; ?>"
+        data-language-id="<?php echo $languageId; ?>"
+        data-category="<?php echo htmlspecialchars($categorySlug); ?>"
+        data-type="<?php echo htmlspecialchars($exercise['type']); ?>"
+        style="display: none;">
     </div>
 
     <script src="../assets/js/learn-game.js"></script>
@@ -447,6 +435,5 @@ if (isset($_POST['completed']) && $exercise) {
             }
         });
     </script>
-    <?php endif; ?>
 </body>
 </html> 
