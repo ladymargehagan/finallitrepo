@@ -58,58 +58,113 @@
 /* Stats Grid Enhancement */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    margin: 3rem 0;
+    gap: 15px;
+    width: 100%;
+}
+
+.language-stats {
+    background: #fff;
+    border-radius: 10px;
+    padding: 15px 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    width: 100%;
+}
+
+.language-stats h3 {
+    font-size: 18px;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
 }
 
 .stat-card {
-    background: linear-gradient(145deg, var(--white), var(--gray-light));
-    padding: 2rem;
-    border-radius: 16px;
-    text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    position: relative;
-    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: var(--coral);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.3s ease;
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-}
-
-.stat-card:hover::before {
-    transform: scaleX(1);
+.stat-item {
+    margin-bottom: 15px;
 }
 
 .stat-value {
-    font-size: 3rem;
-    font-weight: 700;
-    color: var(--ucla-blue);
-    margin-bottom: 1rem;
-    font-family: var(--font-heading);
-    line-height: 1;
+    font-size: 32px;
+    color: #4a90e2;
+    font-weight: 600;
+    margin-bottom: 5px;
 }
 
 .stat-label {
-    color: var(--gray);
-    font-size: 1.2rem;
-    font-weight: 500;
+    font-size: 14px;
+    color: #666;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
+}
+
+.proficiency-breakdown {
+    margin: 10px 0;
+}
+
+.progress-bar {
+    height: 6px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 5px 0;
+}
+
+.progress-segment {
+    height: 100%;
+    float: left;
+}
+
+.progress-segment.mastered { background-color: #4CAF50; }
+.progress-segment.familiar { background-color: #2196F3; }
+.progress-segment.learning { background-color: #FFC107; }
+
+.proficiency-legend {
+    display: flex;
+    gap: 15px;
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.accuracy-rate {
+    margin-top: 10px;
+}
+
+.accuracy-text {
+    font-size: 13px;
+    color: #666;
+    margin-top: 3px;
+}
+
+/* Make overall stats more subtle */
+.overall-stats {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.overall-stats h3 {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.overall-stats .stat-value {
+    font-size: 36px;
+    margin: 5px 0;
+}
+
+.overall-stats .accuracy-rate {
+    max-width: 200px;
+    margin: 10px auto 0;
 }
 
 /* Password Section Enhancement */
@@ -247,63 +302,4 @@
 .auth-buttons a {
     min-width: 140px;
     justify-content: center;
-} 
-
-.proficiency-breakdown {
-    margin-top: 1rem;
-}
-
-.progress-bar {
-    height: 8px;
-    background: var(--gray-light);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 0.5rem;
-}
-
-.progress-segment {
-    height: 100%;
-    float: left;
-    transition: width 0.3s ease;
-}
-
-.progress-segment.mastered { background: #28a745; }
-.progress-segment.familiar { background: var(--ucla-blue); }
-.progress-segment.learning { background: var(--coral); }
-
-.proficiency-legend {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    color: var(--gray);
-}
-
-.proficiency-legend span {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.accuracy-rate {
-    margin-top: 1rem;
-}
-
-.accuracy-bar {
-    height: 8px;
-    background: var(--gray-light);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 0.5rem;
-}
-
-.accuracy-fill {
-    height: 100%;
-    background: var(--ucla-blue);
-    transition: width 0.3s ease;
-}
-
-.accuracy-text {
-    text-align: center;
-    font-size: 0.9rem;
-    color: var(--gray);
 } 
