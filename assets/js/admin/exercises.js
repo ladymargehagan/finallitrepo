@@ -313,6 +313,7 @@ class ExerciseCreator {
     async saveExercise() {
         try {
             const questionText = document.getElementById('questionText').value;
+            const pronunciationText = document.getElementById('pronunciationText').value;
             const languageId = document.getElementById('languageSelect').value;
             const categoryId = document.getElementById('categorySelect').value;
             const difficulty = document.getElementById('difficultySelect').value;
@@ -345,6 +346,7 @@ class ExerciseCreator {
 
             const exerciseData = {
                 question: questionText,
+                pronunciation: pronunciationText,
                 languageId: parseInt(languageId),
                 categoryId: parseInt(categoryId),
                 difficulty,

@@ -81,6 +81,10 @@ $categories = $pdo->query("SELECT categoryId, categoryName FROM word_categories"
                     <div class="exercise-preview">
                         <div class="question-box">
                             <input type="text" id="questionText" placeholder="Enter the question text..." required>
+                            <input type="text" 
+                                   id="pronunciationText" 
+                                   placeholder="Enter the pronunciation (e.g., bohn-ZHOOR)" 
+                                   class="pronunciation-input">
                         </div>
 
                         <div class="answer-box" id="answerBox">
