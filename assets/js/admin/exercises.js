@@ -338,7 +338,7 @@ class ExerciseCreator {
         card.className = 'exercise-card';
         card.innerHTML = `
             <div class="exercise-header">
-                <h3>${exercise.question}</h3>
+                <h3>${exercise.questionText}</h3>
                 <span class="difficulty-badge ${exercise.difficulty.toLowerCase()}">
                     ${exercise.difficulty}
                 </span>

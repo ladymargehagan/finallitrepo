@@ -7,30 +7,25 @@ header('Content-Type: application/json');
 try {
     $languageId = isset($_GET['languageId']) ? $_GET['languageId'] : '';
     
-    $query = "
+    $stmt = $pdo->prepare("
         SELECT 
             es.exerciseId,
-            w.word as question,
+            w.original_text as questionText,
+            w.pronunciation,
             w.difficulty,
             wc.categoryName,
-            l.languageName
+            l.languageName,
+            w.languageId,
+            w.categoryId
         FROM exercise_sets es
         JOIN words w ON es.wordId = w.wordId
         JOIN word_categories wc ON w.categoryId = wc.categoryId
         JOIN languages l ON w.languageId = l.languageId
-    ";
+        WHERE (:languageId = '' OR w.languageId = :languageId)
+        ORDER BY es.exerciseId DESC
+    ");
     
-    if ($languageId) {
-        $query .= " WHERE w.languageId = ?";
-    }
-    
-    $stmt = $pdo->prepare($query);
-    
-    if ($languageId) {
-        $stmt->execute([$languageId]);
-    } else {
-        $stmt->execute();
-    }
+    $stmt->execute(['languageId' => $languageId]);
     
     $exercises = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode($exercises);
