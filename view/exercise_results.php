@@ -50,7 +50,7 @@ $timeTaken = isset($results['end_time']) ?
             <div class="stats-grid">
                 <div class="stat-item">
                     <i class="fas fa-check-circle"></i>
-                    <span class="stat-value"><?php echo $sessionData['correctWords']; ?>/<?php echo $sessionData['totalWords']; ?></span>
+                    <span class="stat-value"><?php echo $correctWords; ?>/<?php echo $totalWords; ?></span>
                     <span class="stat-label">Correct Answers</span>
                 </div>
                 <div class="stat-item">
