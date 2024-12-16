@@ -116,6 +116,10 @@ $learningPercent = round(($stats['learning_count'] / $totalWords) * 100);
                         <div class="accuracy-text"><?php echo $accuracy; ?>% Accuracy</div>
                     </div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-value"><?php echo $stats['total_attempts']; ?></div>
+                    <div class="stat-label">Total Attempts</div>
+                </div>
             </div>
         </div>
 
