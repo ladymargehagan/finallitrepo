@@ -314,3 +314,27 @@ h1, h2, h3, h4, h5, h6 {
 .auth-buttons a {
     text-decoration: none;
 }
+
+/* Reset link styles */
+a {
+    text-decoration: none;
+}
+
+/* Reset button styles */
+button, 
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-update {
+    text-decoration: none;
+}
+
+/* Ensure hover states don't add underlines */
+a:hover,
+button:hover,
+.btn:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-update:hover {
+    text-decoration: none;
+}
