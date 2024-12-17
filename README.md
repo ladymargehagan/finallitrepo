@@ -84,6 +84,3 @@ We welcome contributions to the LIT platform! Please follow these steps:
 Project Link: [http://169.239.251.102:3341/~lady.hagan/LIT/)
 Demo: https://youtu.be/0AYTRR28PXA
 
----
-
-Made with ❤️ by [Lady-M. Hagan]
