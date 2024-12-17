@@ -303,3 +303,19 @@
     min-width: 140px;
     justify-content: center;
 } 
+
+.error-message {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    display: none;
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+.error-message.success {
+    color: #28a745;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+} 

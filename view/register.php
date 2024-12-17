@@ -7,6 +7,22 @@
     <title>Register - Language Learning Platform</title>
     <link rel="stylesheet" href="../assets/css/styles.css">
     <link rel="stylesheet" href="../assets/css/auth.css">
+    <style>
+        .field-error {
+            color: #dc3545;
+            font-size: 0.8em;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .invalid {
+            border-color: #dc3545 !important;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
 <body class="auth-page">
     <div class="auth-container">
@@ -50,38 +66,6 @@
         </div>
     </footer>
 
-    <script>
-        document.getElementById('registerForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                email: document.getElementById('email').value,
-                password: document.getElementById('password').value
-            };
-
-            fetch('../actions/register_user.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                const errorDiv = document.getElementById('error-messages');
-                
-                if (data.success) {
-                    window.location.href = 'login.php?registered=true';
-                } else {
-                    errorDiv.style.display = 'block';
-                    errorDiv.innerHTML = data.errors.map(error => 
-                        `<p class="error">${error}</p>`
-                    ).join('');
-                }
-            });
-        });
-    </script>
+    <script src="../assets/js/auth/register.js"></script>
 </body>
 </html> 

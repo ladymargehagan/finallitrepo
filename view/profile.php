@@ -200,7 +200,7 @@ $learningPercent = round(($overallStats['learning_count'] / $totalWords) * 100);
         <!-- Password Change Form -->
         <div class="password-section">
             <h3>Change Password</h3>
-            <form class="password-form" action="../actions/update_password.php" method="POST">
+            <form class="password-form">
                 <div class="form-group">
                     <label for="current_password">Current Password</label>
                     <input type="password" id="current_password" name="current_password" required>
@@ -208,6 +208,7 @@ $learningPercent = round(($overallStats['learning_count'] / $totalWords) * 100);
                 <div class="form-group">
                     <label for="new_password">New Password</label>
                     <input type="password" id="new_password" name="new_password" required>
+                    <small>Minimum 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character</small>
                 </div>
                 <div class="form-group">
                     <label for="confirm_password">Confirm New Password</label>
@@ -218,17 +219,6 @@ $learningPercent = round(($overallStats['learning_count'] / $totalWords) * 100);
         </div>
     </div>
 
-    <script>
-        // Client-side password validation
-        document.querySelector('.password-form').addEventListener('submit', function(e) {
-            const newPass = document.getElementById('new_password').value;
-            const confirmPass = document.getElementById('confirm_password').value;
-            
-            if (newPass !== confirmPass) {
-                e.preventDefault();
-                alert('New passwords do not match!');
-            }
-        });
-    </script>
+    <script src="../assets/js/auth/password-change.js"></script>
 </body>
 </html> 
