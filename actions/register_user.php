@@ -3,6 +3,9 @@ session_start();
 $rootPath = dirname(dirname(__FILE__));
 require $rootPath . '/config/db_connect.php';
 header('Content-Type: application/json');
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Allow-Headers: Content-Type");
 
 // Add these debug lines temporarily
 error_log("Root path: " . $rootPath);
