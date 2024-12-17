@@ -80,7 +80,7 @@ We welcome contributions to the LIT platform! Please follow these steps:
 5. Open a Pull Request
 
 
-## Links 📧
-Project Link: [http://169.239.251.102:3341/~lady.hagan/LIT/)
+## Links 
+Project Link: http://169.239.251.102:3341/~lady.hagan/LIT/
 Demo: https://youtu.be/0AYTRR28PXA
 
