@@ -1,12 +1,11 @@
-# LIT - Language Learning Platform 
+# LIT - Lost in Translation  
 
-LIT (Language Interactive Training) is a modern, interactive web platform designed to make language learning engaging and effective. The platform offers personalized learning experiences through interactive exercises, progress tracking, and a community-driven approach.
+LIT (Lost in Translation) is a modern, interactive web platform designed to make language learning engaging and effective. The platform offers personalized learning experiences through interactive exercises and progress tracking. 
 
 ## Features 
 
 - **Interactive Learning**: Engage with native speakers and dynamic lessons
 - **Progress Tracking**: Monitor your learning journey with detailed analytics
-- **Community Integration**: Connect with language learners worldwide
 - **Adaptive Learning**: Personalized exercise difficulty based on performance
 - **Multi-language Support**: Learn multiple languages on a single platform
 - **Admin Dashboard**: Comprehensive tools for content management
